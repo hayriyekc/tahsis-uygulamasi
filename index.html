@@ -1,1 +1,1073 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTBF Tahsis Uygulaması</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
+  :root {
+    --bg:        #0d1117;
+    --bg2:       #161b22;
+    --bg3:       #21262d;
+    --border:    #30363d;
+    --border2:   #484f58;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --text3:     #6e7681;
+    --accent:    #58a6ff;
+    --accent2:   #1f6feb;
+    --green:     #3fb950;
+    --orange:    #d29922;
+    --red:       #f85149;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg2);
+  }
+  .header-icon {
+    width: 36px; height: 36px;
+    background: var(--accent2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+  .header p  { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-top: 1px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  /* STEPS */
+  .step {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .step-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg3);
+  }
+  .step-num {
+    width: 24px; height: 24px;
+    background: var(--accent2);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+  }
+  .step-header h2 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .step-header span { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
+  .step-body { padding: 20px; }
+
+  /* FORM ELEMENTS */
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input[type=text], input[type=number], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+  }
+  select option { background: var(--bg2); }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .field-group { margin-bottom: 16px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+  @media (max-width: 700px) {
+    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
+  }
+
+  /* INFO / WARN BOXES */
+  .info-box, .warn-box, .success-box {
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .info-box    { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); color: #a5c8ff; }
+  .warn-box    { background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.3);  color: #e3b341; }
+  .success-box { background: rgba(63,185,80,0.08);  border: 1px solid rgba(63,185,80,0.3);   color: #7ee787; }
+  .info-box .icon, .warn-box .icon, .success-box .icon { flex-shrink: 0; font-size: 15px; }
+
+  /* MONO VALUE DISPLAY */
+  .mono-val {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  /* METHOD CARD */
+  .method-desc {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 16px;
+  }
+  .method-desc strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* BIRIM CARD */
+  .birim-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .birim-card-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--mono);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* SLIDER WITH VALUE */
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row input[type=range] { flex: 1; }
+  .slider-val {
+    min-width: 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  /* PREVIEW TABLE */
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  .preview-table th {
+    background: var(--bg3);
+    color: var(--text2);
+    font-weight: 500;
+    text-align: left;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .preview-table td {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    color: var(--text);
+  }
+  .preview-table tr:hover td { background: var(--bg3); }
+  .td-name { font-family: var(--sans) !important; font-weight: 500; }
+  .td-sabit { color: var(--orange) !important; }
+  .td-hesap { color: var(--green)  !important; }
+
+  /* BUTTON */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+    margin-bottom: 20px;
+  }
+  .btn-primary:hover  { background: #388bfd; }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .btn-secondary {
+    padding: 8px 18px;
+    background: var(--bg3);
+    color: var(--text);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  /* RESULTS */
+  .results-hidden { display: none; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 600px) { .metric-row { grid-template-columns: 1fr; } }
+
+  .metric-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .metric-card .m-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .metric-card .m-value { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .metric-card .m-sub   { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .metric-card.ok    { border-color: rgba(63,185,80,0.4); }
+  .metric-card.ok .m-value { color: var(--green); }
+
+  .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .result-table th {
+    background: var(--bg3);
+    color: var(--text2);
+    font-weight: 500;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .result-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .result-table tr:hover td { background: var(--bg3); }
+  .result-table .td-mtbf { font-family: var(--mono); font-weight: 600; color: var(--accent); }
+  .result-table .td-lambda { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .result-table .td-pay { font-family: var(--mono); color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-sabit { background: rgba(210,153,34,0.15); color: var(--orange); border: 1px solid rgba(210,153,34,0.3); }
+  .badge-hesap { background: rgba(63,185,80,0.12);  color: var(--green);  border: 1px solid rgba(63,185,80,0.3); }
+
+  /* PARAMS DETAIL */
+  .params-detail {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    font-size: 12px;
+  }
+  .params-detail h4 { color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .params-detail .param-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .params-detail .param-row:last-child { border-bottom: none; }
+  .params-detail .param-key { color: var(--text2); }
+  .params-detail .param-val { font-family: var(--mono); color: var(--text); }
+
+  /* CSV BUTTON */
+  .csv-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--bg3);
+    color: var(--green);
+    border: 1px solid rgba(63,185,80,0.3);
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 16px;
+    transition: background 0.15s;
+  }
+  .csv-btn:hover { background: var(--border); }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* FORMULA BOX */
+  .formula {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    margin: 8px 0;
+  }
+  .formula span { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">⚙</div>
+  <div>
+    <h1>MTBF Tahsis Uygulaması</h1>
+    <p>MIL-HDBK-338B §5.3.2 — Reliability Allocation Methods</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ADIM 1: SİSTEM BİLGİLERİ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <h2>Sistem Bilgileri</h2>
+    </div>
+    <div class="step-body">
+      <div class="grid-2">
+        <div class="field-group">
+          <label class="field-label">Sistem MTBF Hedefi (saat)</label>
+          <input type="number" id="sistemMtbf" value="10000" min="1" step="100" oninput="updateSistemInfo()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Birim Sayısı</label>
+          <input type="number" id="birimSayisi" value="4" min="2" max="20" step="1" oninput="renderBirimler()">
+        </div>
+      </div>
+      <div class="info-box" id="sistemInfoBox">
+        <span class="icon">ℹ</span>
+        <span id="sistemInfoText"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADIM 2: BİRİM İSİMLERİ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <h2>Birim İsimleri</h2>
+    </div>
+    <div class="step-body">
+      <div id="birimIsimlerGrid" class="grid-5"></div>
+    </div>
+  </div>
+
+  <!-- ADIM 3: BİLİNEN MTBF -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <h2>MTBF Değeri Bilinen Birimler</h2>
+      <span>Opsiyonel</span>
+    </div>
+    <div class="step-body">
+      <div class="info-box">
+        <span class="icon">ℹ</span>
+        <span>MTBF değeri önceden belirlenmiş birimler için değer girin (COTS ürün, önceki analiz vb.). Bu birimler sabit tutulur. Bilinmiyorsa <strong>0</strong> bırakın.</span>
+      </div>
+      <div id="bilinenMtbfGrid" class="grid-5"></div>
+      <div id="kalanLambdaBox" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ADIM 4: YÖNTEM -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <h2>Tahsis Yöntemi Seçimi</h2>
+    </div>
+    <div class="step-body">
+      <div class="field-group">
+        <label class="field-label">Yöntem</label>
+        <select id="yontemSelect" onchange="renderYontemParams()">
+          <option value="equal">Equal Allocation — Eşit Dağıtım (§5.3.2.1)</option>
+          <option value="arinc">ARINC Allocation — Mevcut Arıza Oranına Göre (§5.3.2.2)</option>
+          <option value="agree">AGREE Allocation — Karmaşıklık ve Görev Süresi (§5.3.2.3)</option>
+          <option value="fo">Feasibility of Objectives — Gerçekçi Hedef (§5.3.2.4)</option>
+        </select>
+      </div>
+      <div id="yontemAciklama" class="method-desc"></div>
+    </div>
+  </div>
+
+  <!-- ADIM 5: YÖNTEME ÖZEL PARAMETRELER -->
+  <div class="step" id="adim5" class="hidden">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <h2 id="adim5Baslik">Yöntem Parametreleri</h2>
+    </div>
+    <div class="step-body" id="yontemParamBody"></div>
+  </div>
+
+  <!-- HESAPLA -->
+  <button class="btn-primary" onclick="hesapla()">⟶ Tahsis Hesapla</button>
+
+  <!-- SONUÇLAR -->
+  <div id="sonuclar" class="results-hidden">
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num" style="background:#3fb950">✓</div>
+        <h2>Tahsis Sonuçları</h2>
+        <span id="sonucYontemLabel"></span>
+      </div>
+      <div class="step-body">
+
+        <div class="metric-row">
+          <div class="metric-card">
+            <div class="m-label">Hedef Sistem MTBF</div>
+            <div class="m-value" id="sonucHedef">—</div>
+            <div class="m-sub">saat</div>
+          </div>
+          <div class="metric-card ok" id="sonucHesaplananCard">
+            <div class="m-label">Hesaplanan Sistem MTBF</div>
+            <div class="m-value" id="sonucHesaplanan">—</div>
+            <div class="m-sub">saat</div>
+          </div>
+          <div class="metric-card" id="sonucSapmaCard">
+            <div class="m-label">Doğrulama</div>
+            <div class="m-value" id="sonucSapma">—</div>
+            <div class="m-sub" id="sonucSapmaLabel">—</div>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto">
+          <table class="result-table" id="sonucTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Birim</th>
+                <th>Tahsis Edilen MTBF (saat)</th>
+                <th>Arıza Oranı λ (arıza/saat)</th>
+                <th>Sistem λ İçindeki Pay</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="sonucTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="params-detail" id="paramsDetail">
+          <h4>Hesaplamada Kullanılan Parametreler</h4>
+          <div id="paramsDetailBody"></div>
+        </div>
+
+        <a class="csv-btn" id="csvBtn" onclick="csvIndir()">↓ CSV İndir</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let birimIsimleri = [];
+let sonucData = [];
+
+// ─── YARDIMCI ───────────────────────────────────────────────────────────────
+function fmtN(v, d=2) {
+  if (!isFinite(v)) return '∞';
+  return v.toLocaleString('tr-TR', {minimumFractionDigits:d, maximumFractionDigits:d});
+}
+function fmtL(v) {
+  return v.toFixed(8);
+}
+function getSistemMtbf()  { return parseFloat(document.getElementById('sistemMtbf').value) || 10000; }
+function getBirimSayisi() { return Math.max(2, Math.min(20, parseInt(document.getElementById('birimSayisi').value) || 4)); }
+function getYontem()      { return document.getElementById('yontemSelect').value; }
+
+function getBirimIsimleri() {
+  const n = getBirimSayisi();
+  const arr = [];
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(`isim_${i}`);
+    arr.push(el ? el.value || `Birim ${i+1}` : `Birim ${i+1}`);
+  }
+  return arr;
+}
+function getBilinenMtbf() {
+  const n = getBirimSayisi();
+  const obj = {};
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(`bilinen_${i}`);
+    const v = parseFloat(el ? el.value : 0);
+    if (v > 0) obj[i] = v;
+  }
+  return obj;
+}
+function getSerbest(bilinen) {
+  const n = getBirimSayisi();
+  return Array.from({length: n}, (_, i) => i).filter(i => !(i in bilinen));
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+window.onload = function() {
+  updateSistemInfo();
+  renderBirimler();
+  renderYontemParams();
+};
+
+// ─── SİSTEM BİLGİSİ ─────────────────────────────────────────────────────────
+function updateSistemInfo() {
+  const m = getSistemMtbf();
+  const l = 1 / m;
+  document.getElementById('sistemInfoText').innerHTML =
+    `λ_sistem = 1 / ${fmtN(m)} = <strong class="mono-val">${fmtL(l)}</strong> arıza/saat`;
+  updateKalanLambda();
+}
+
+// ─── BİRİM RENDER ───────────────────────────────────────────────────────────
+function renderBirimler() {
+  const n = getBirimSayisi();
+  const colClass = n <= 4 ? `grid-${n}` : 'grid-5';
+
+  // İsimler
+  const isimGrid = document.getElementById('birimIsimlerGrid');
+  isimGrid.className = colClass;
+  isimGrid.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const prev = document.getElementById(`isim_${i}`);
+    const val = prev ? prev.value : `Birim ${i+1}`;
+    isimGrid.innerHTML += `
+      <div class="field-group">
+        <label class="field-label">Birim ${i+1}</label>
+        <input type="text" id="isim_${i}" value="${val}" oninput="refreshIsimler()">
+      </div>`;
+  }
+
+  // Bilinen MTBF
+  const bilGrid = document.getElementById('bilinenMtbfGrid');
+  bilGrid.className = colClass;
+  bilGrid.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const prev = document.getElementById(`bilinen_${i}`);
+    const val = prev ? prev.value : '0';
+    bilGrid.innerHTML += `
+      <div class="field-group">
+        <label class="field-label" id="bilinen_label_${i}">Birim ${i+1}</label>
+        <input type="number" id="bilinen_${i}" value="${val}" min="0" step="100"
+               oninput="updateKalanLambda()">
+      </div>`;
+  }
+
+  refreshIsimler();
+  renderYontemParams();
+  updateSistemInfo();
+}
+
+function refreshIsimler() {
+  const n = getBirimSayisi();
+  for (let i = 0; i < n; i++) {
+    const isimEl = document.getElementById(`isim_${i}`);
+    const lbl = document.getElementById(`bilinen_label_${i}`);
+    if (isimEl && lbl) lbl.textContent = isimEl.value || `Birim ${i+1}`;
+  }
+  updateKalanLambda();
+  renderYontemParams();
+}
+
+// ─── KALAN LAMBDA ────────────────────────────────────────────────────────────
+function updateKalanLambda() {
+  const sistemMtbf = getSistemMtbf();
+  const sistemL = 1 / sistemMtbf;
+  const bilinen = getBilinenMtbf();
+  const box = document.getElementById('kalanLambdaBox');
+
+  if (Object.keys(bilinen).length === 0) {
+    box.className = 'hidden';
+    return;
+  }
+
+  const bilinenL = Object.values(bilinen).reduce((s, v) => s + 1/v, 0);
+  const kalanL = sistemL - bilinenL;
+  const serbest = getSerbest(bilinen);
+
+  if (kalanL <= 0) {
+    box.className = 'warn-box';
+    box.innerHTML = `<span class="icon">⚠</span><span>Sabit birim arıza oranları toplamı sistem hedefini aşıyor! Değerleri kontrol edin.</span>`;
+  } else {
+    box.className = 'info-box';
+    box.innerHTML = `<span class="icon">ℹ</span><span>
+      Sabit birimler sonrası <strong>${serbest.length} serbest birime</strong> dağıtılacak
+      kalan λ = <span class="mono-val">${fmtL(kalanL)}</span>
+      &nbsp;(eşdeğer MTBF: <span class="mono-val">${fmtN(1/kalanL)} saat</span>)
+    </span>`;
+  }
+}
+
+// ─── YÖNTEM AÇIKLAMA + PARAMETRELER ─────────────────────────────────────────
+const YONTEM_ACIK = {
+  equal: {
+    baslik: 'Equal Allocation — Parametreler',
+    acik: '<strong>Tüm serbest birimlere eşit arıza oranı tahsis edilir.</strong><br>Ek parametre gerekmez. Doğrudan hesaplayabilirsiniz.<br><em>Ne zaman kullanılır: Tasarımın çok erken aşamasında, birimler hakkında hiçbir bilgi yokken.</em>',
+    formul: 'λ_birim = λ_kalan / N_serbest &nbsp;→&nbsp; MTBF_birim = 1 / λ_birim'
+  },
+  arinc: {
+    baslik: 'ARINC Allocation — Mevcut Arıza Oranları',
+    acik: '<strong>Birimlerin mevcut/tahmini arıza oranlarına göre ağırlıklandırılır.</strong><br>Her serbest birim için mevcut MTBF değerini girin. Arıza yükü fazla olan birime tahsisten daha fazla pay düşer.<br><em>Kaynak: saha verisi, 217F Parts Count tahmini veya NPRD/EPRD veri tabanı.</em>',
+    formul: 'w_i = λ_mevcut_i / Σλ_mevcut &nbsp;→&nbsp; λ_tahsis_i = w_i × λ_kalan'
+  },
+  agree: {
+    baslik: 'AGREE Allocation — Karmaşıklık ve Görev Süresi',
+    acik: '<strong>Birimin karmaşıklığı (modül sayısı), görev süresi ve kritikliği dikkate alınır.</strong><br>Her birim için modül sayısı (n), görev süresi (t) ve kritiklik (w) girin.<br><em>Ne zaman kullanılır: Tasarım detayları belli olduğunda, karmaşıklık farkı büyük birimlerde.</em>',
+    formul: 'MTBF_i = (Σn_j × t_i) / (n_i × w_i × λ_kalan × T)'
+  },
+  fo: {
+    baslik: 'Feasibility of Objectives — Mevcut Performans ve Güçlük',
+    acik: '<strong>Hem mevcut performans hem iyileştirme güçlüğü dikkate alınır.</strong><br>Her birim için mevcut MTBF ve güçlük faktörü (1–10) girin. Pratikte en çok tercih edilen yöntemdir.<br><em>Ne zaman kullanılır: Karma sistemlerde — bazı birimler olgunlaşmış, bazıları yeni geliştirme.</em>',
+    formul: 'Ağırlık_i = (1/MTBF_mevcut_i) × güçlük_i &nbsp;→&nbsp; w_i = Ağırlık_i / ΣAğırlık'
+  }
+};
+
+function renderYontemParams() {
+  const yontem = getYontem();
+  const info = YONTEM_ACIK[yontem];
+  const bilinen = getBilinenMtbf();
+  const serbest = getSerbest(bilinen);
+  const isimler = getBirimIsimleri();
+
+  // Açıklama
+  document.getElementById('yontemAciklama').innerHTML =
+    `${info.acik}<div class="formula"><span>${info.formul}</span></div>`;
+
+  // Adım 5 başlık
+  document.getElementById('adim5Baslik').textContent = info.baslik;
+
+  const body = document.getElementById('yontemParamBody');
+  const adim5 = document.getElementById('adim5');
+
+  if (yontem === 'equal') {
+    adim5.style.display = 'none';
+    return;
+  }
+  adim5.style.display = '';
+
+  if (yontem === 'arinc') {
+    body.innerHTML = `
+      <div class="info-box" style="margin-bottom:16px">
+        <span class="icon">ℹ</span>
+        <span>Her serbest birim için mevcut/tahmini MTBF değerini girin. Tahsis ağırlıkları otomatik hesaplanır.</span>
+      </div>
+      <div id="arincGrid"></div>
+      <div id="arincOnizleme"></div>`;
+
+    const grid = document.getElementById('arincGrid');
+    grid.className = serbest.length <= 5 ? `grid-${Math.min(serbest.length,5)}` : 'grid-5';
+    serbest.forEach(i => {
+      const prev = document.getElementById(`arinc_${i}`);
+      const val = prev ? prev.value : '5000';
+      grid.innerHTML += `
+        <div class="field-group">
+          <label class="field-label">${isimler[i]}<br>Mevcut MTBF (saat)</label>
+          <input type="number" id="arinc_${i}" value="${val}" min="1" step="100" oninput="updateArincOnizleme()">
+        </div>`;
+    });
+    updateArincOnizleme();
+  }
+
+  else if (yontem === 'agree') {
+    body.innerHTML = `
+      <div class="info-box" style="margin-bottom:16px">
+        <span class="icon">ℹ</span>
+        <span>
+          <strong>nᵢ:</strong> Alt modül/kart sayısı (karmaşıklık) &nbsp;|&nbsp;
+          <strong>tᵢ:</strong> Birimin görev boyunca aktif olduğu süre (saat) &nbsp;|&nbsp;
+          <strong>wᵢ:</strong> Kritiklik — 1.0: arıza tam görev başarısızlığına yol açar; 0.5: görevin yarısını etkiler
+        </span>
+      </div>
+      <div class="field-group" style="max-width:280px; margin-bottom:20px">
+        <label class="field-label">Sistem Görev Süresi T (saat)</label>
+        <input type="number" id="agreeT" value="10" min="0.1" step="0.5">
+      </div>
+      <div id="agreeCards"></div>`;
+
+    const cards = document.getElementById('agreeCards');
+    serbest.forEach(i => {
+      const pn = document.getElementById(`agree_n_${i}`);
+      const pt = document.getElementById(`agree_t_${i}`);
+      const pw = document.getElementById(`agree_w_${i}`);
+      const vn = pn ? pn.value : '10';
+      const vt = pt ? pt.value : '10';
+      const vw = pw ? pw.value : '1.0';
+      cards.innerHTML += `
+        <div class="birim-card">
+          <div class="birim-card-header">▸ ${isimler[i]}</div>
+          <div class="grid-3">
+            <div class="field-group">
+              <label class="field-label">Modül sayısı nᵢ</label>
+              <input type="number" id="agree_n_${i}" value="${vn}" min="1" step="1">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Görev süresi tᵢ (saat)</label>
+              <input type="number" id="agree_t_${i}" value="${vt}" min="0.01" step="0.5">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Kritiklik wᵢ &nbsp;<span id="agree_w_val_${i}" style="color:var(--accent);font-family:var(--mono)">${vw}</span></label>
+              <div class="slider-row">
+                <input type="range" id="agree_w_${i}" min="0" max="1" step="0.05" value="${vw}"
+                  oninput="document.getElementById('agree_w_val_${i}').textContent=parseFloat(this.value).toFixed(2)">
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  else if (yontem === 'fo') {
+    body.innerHTML = `
+      <div class="info-box" style="margin-bottom:16px">
+        <span class="icon">ℹ</span>
+        <span>
+          <strong>Güçlük Rehberi:</strong>
+          1–2: COTS / kolay değişim &nbsp;|&nbsp;
+          3–4: Küçük revizyon &nbsp;|&nbsp;
+          5–6: Orta düzey tasarım değişikliği &nbsp;|&nbsp;
+          7–8: Kapsamlı yeniden tasarım &nbsp;|&nbsp;
+          9–10: Teknoloji sınırı
+        </span>
+      </div>
+      <div id="foCards"></div>
+      <div id="foOnizleme"></div>`;
+
+    const cards = document.getElementById('foCards');
+    serbest.forEach(i => {
+      const pm = document.getElementById(`fo_mev_${i}`);
+      const pg = document.getElementById(`fo_guc_${i}`);
+      const vm = pm ? pm.value : '5000';
+      const vg = pg ? pg.value : '5';
+      cards.innerHTML += `
+        <div class="birim-card">
+          <div class="birim-card-header">▸ ${isimler[i]}</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label">Mevcut MTBF (saat)</label>
+              <input type="number" id="fo_mev_${i}" value="${vm}" min="1" step="100" oninput="updateFoOnizleme()">
+            </div>
+            <div class="field-group">
+              <label class="field-label">
+                Güçlük faktörü &nbsp;
+                <span id="fo_guc_val_${i}" style="color:var(--accent);font-family:var(--mono)">${vg}</span>/10
+              </label>
+              <div class="slider-row">
+                <input type="range" id="fo_guc_${i}" min="1" max="10" step="1" value="${vg}"
+                  oninput="document.getElementById('fo_guc_val_${i}').textContent=this.value; updateFoOnizleme()">
+                <span class="slider-val" id="fo_guc_disp_${i}">${vg}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+    updateFoOnizleme();
+  }
+}
+
+// ─── ARINC ÖNİZLEME ─────────────────────────────────────────────────────────
+function updateArincOnizleme() {
+  const bilinen = getBilinenMtbf();
+  const serbest = getSerbest(bilinen);
+  const isimler = getBirimIsimleri();
+  const box = document.getElementById('arincOnizleme');
+  if (!box) return;
+
+  const vals = {};
+  let toplam = 0;
+  serbest.forEach(i => {
+    const el = document.getElementById(`arinc_${i}`);
+    const v = parseFloat(el ? el.value : 5000) || 5000;
+    vals[i] = 1/v;
+    toplam += 1/v;
+  });
+
+  let rows = serbest.map(i => {
+    const pay = (vals[i]/toplam*100).toFixed(1);
+    return `<tr>
+      <td class="td-name">${isimler[i]}</td>
+      <td>${fmtN(1/vals[i])} saat</td>
+      <td>${fmtL(vals[i])}</td>
+      <td>${pay}%</td>
+    </tr>`;
+  }).join('');
+
+  box.innerHTML = `
+    <table class="preview-table" style="margin-top:16px">
+      <thead><tr><th>Birim</th><th>Mevcut MTBF</th><th>λ_mevcut</th><th>Tahsis Ağırlığı</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ─── FO ÖNİZLEME ────────────────────────────────────────────────────────────
+function updateFoOnizleme() {
+  const bilinen = getBilinenMtbf();
+  const serbest = getSerbest(bilinen);
+  const isimler = getBirimIsimleri();
+  const box = document.getElementById('foOnizleme');
+  if (!box) return;
+
+  const agirlik = {};
+  let toplam = 0;
+  serbest.forEach(i => {
+    const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
+    const guc = parseFloat((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
+    agirlik[i] = (1/mev) * guc;
+    toplam += agirlik[i];
+  });
+
+  const rows = serbest.map(i => {
+    const pay = (agirlik[i]/toplam*100).toFixed(1);
+    const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
+    const guc = parseInt((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
+    return `<tr>
+      <td class="td-name">${isimler[i]}</td>
+      <td>${fmtN(mev)} saat</td>
+      <td>${guc}/10</td>
+      <td>${pay}%</td>
+    </tr>`;
+  }).join('');
+
+  box.innerHTML = `
+    <table class="preview-table" style="margin-top:16px">
+      <thead><tr><th>Birim</th><th>Mevcut MTBF</th><th>Güçlük</th><th>Tahsis Ağırlığı</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ─── HESAPLAMA ───────────────────────────────────────────────────────────────
+function hesapla() {
+  const sistemMtbf = getSistemMtbf();
+  const sistemL = 1/sistemMtbf;
+  const yontem = getYontem();
+  const n = getBirimSayisi();
+  const isimler = getBirimIsimleri();
+  const bilinen = getBilinenMtbf();
+  const serbest = getSerbest(bilinen);
+
+  const bilinenL = Object.values(bilinen).reduce((s,v) => s+1/v, 0);
+  const kalanL = sistemL - bilinenL;
+
+  if (kalanL <= 0) {
+    alert('Sabit birim arıza oranları toplamı sistem hedefini aşıyor. Lütfen değerleri kontrol edin.');
+    return;
+  }
+  if (serbest.length === 0) {
+    alert('Tüm birimler sabit — tahsis edilecek serbest birim yok.');
+    return;
+  }
+
+  const sonucMtbf = {...bilinen};
+
+  if (yontem === 'equal') {
+    const lam = kalanL / serbest.length;
+    serbest.forEach(i => sonucMtbf[i] = 1/lam);
+  }
+
+  else if (yontem === 'arinc') {
+    const mevL = {};
+    let topL = 0;
+    serbest.forEach(i => {
+      const v = parseFloat((document.getElementById(`arinc_${i}`) || {}).value) || 5000;
+      mevL[i] = 1/v;
+      topL += 1/v;
+    });
+    serbest.forEach(i => {
+      const pay = mevL[i]/topL;
+      sonucMtbf[i] = 1/(pay*kalanL);
+    });
+  }
+
+  else if (yontem === 'agree') {
+    const T = parseFloat((document.getElementById('agreeT') || {}).value) || 10;
+    const apArr = {};
+    let topN = 0;
+    serbest.forEach(i => {
+      const ni = parseInt((document.getElementById(`agree_n_${i}`) || {}).value) || 10;
+      const ti = parseFloat((document.getElementById(`agree_t_${i}`) || {}).value) || T;
+      const wi = parseFloat((document.getElementById(`agree_w_${i}`) || {}).value) || 1;
+      apArr[i] = {ni, ti, wi};
+      topN += ni;
+    });
+    serbest.forEach(i => {
+      const {ni, ti, wi} = apArr[i];
+      if (wi === 0 || ti === 0) { sonucMtbf[i] = Infinity; return; }
+      sonucMtbf[i] = (topN * ti) / (ni * wi * kalanL * T);
+    });
+    window._agreeParams = {T, apArr};
+  }
+
+  else if (yontem === 'fo') {
+    const fp = {};
+    let topAg = 0;
+    serbest.forEach(i => {
+      const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
+      const guc = parseInt((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
+      fp[i] = {mev, guc, ag: (1/mev)*guc};
+      topAg += fp[i].ag;
+    });
+    serbest.forEach(i => {
+      sonucMtbf[i] = 1/(fp[i].ag/topAg*kalanL);
+    });
+    window._foParams = fp;
+  }
+
+  // Doğrulama
+  const finiteVals = Object.values(sonucMtbf).filter(v => isFinite(v));
+  const topLSonuc = finiteVals.reduce((s,v) => s+1/v, 0);
+  const hesSistemMtbf = 1/topLSonuc;
+  const fark = ((hesSistemMtbf - sistemMtbf)/sistemMtbf)*100;
+
+  // Metrikler
+  document.getElementById('sonucHedef').textContent = fmtN(sistemMtbf);
+  document.getElementById('sonucHesaplanan').textContent = fmtN(hesSistemMtbf);
+  document.getElementById('sonucSapma').textContent = `%${Math.abs(fark).toFixed(4)}`;
+  document.getElementById('sonucSapmaLabel').textContent = Math.abs(fark) < 0.1 ? '✓ Hedef karşılandı' : '⚠ Kontrol edin';
+  document.getElementById('sonucSapmaCard').className = 'metric-card ' + (Math.abs(fark) < 0.1 ? 'ok' : '');
+  document.getElementById('sonucYontemLabel').textContent = document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text;
+
+  // Tablo
+  const tbody = document.getElementById('sonucTableBody');
+  tbody.innerHTML = '';
+  sonucData = [];
+  for (let i = 0; i < n; i++) {
+    const mv = sonucMtbf[i];
+    const sabit = i in bilinen;
+    const lv = isFinite(mv) ? 1/mv : 0;
+    const pay = isFinite(mv) ? lv/topLSonuc*100 : 0;
+    const row = {
+      no: i+1, birim: isimler[i],
+      mtbf: isFinite(mv) ? fmtN(mv) : '∞',
+      lambda: fmtL(lv), pay: pay.toFixed(2)+'%',
+      durum: sabit ? 'Sabit' : 'Hesaplanan'
+    };
+    sonucData.push(row);
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--text3);font-family:var(--mono)">${i+1}</td>
+        <td class="td-name">${isimler[i]}</td>
+        <td class="td-mtbf">${row.mtbf}</td>
+        <td class="td-lambda">${row.lambda}</td>
+        <td class="td-pay">${row.pay}</td>
+        <td><span class="badge ${sabit ? 'badge-sabit' : 'badge-hesap'}">${sabit ? '🔒 Sabit' : '📐 Hesaplanan'}</span></td>
+      </tr>`;
+  }
+
+  // Parametreler detayı
+  const pBody = document.getElementById('paramsDetailBody');
+  pBody.innerHTML = '';
+  const addParam = (k, v) => {
+    pBody.innerHTML += `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`;
+  };
+  addParam('Yöntem', document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text);
+  addParam('Sistem MTBF Hedefi', `${fmtN(sistemMtbf)} saat`);
+  addParam('λ_sistem', `${fmtL(sistemL)} arıza/saat`);
+  if (Object.keys(bilinen).length > 0) {
+    addParam('Sabit birimler toplam λ', `${fmtL(bilinenL)}`);
+    addParam('Serbest birimlere kalan λ', `${fmtL(kalanL)}`);
+    Object.entries(bilinen).forEach(([i,v]) => {
+      addParam(`  Sabit: ${isimler[i]}`, `${fmtN(v)} saat`);
+    });
+  }
+  if (yontem === 'agree' && window._agreeParams) {
+    addParam('AGREE — Sistem Görev Süresi T', `${window._agreeParams.T} saat`);
+    serbest.forEach(i => {
+      const p = window._agreeParams.apArr[i];
+      addParam(`  ${isimler[i]}`, `nᵢ=${p.ni}, tᵢ=${p.ti} saat, wᵢ=${p.wi}`);
+    });
+  }
+  if (yontem === 'fo' && window._foParams) {
+    serbest.forEach(i => {
+      const p = window._foParams[i];
+      addParam(`  ${isimler[i]}`, `Mevcut=${fmtN(p.mev)} saat, Güçlük=${p.guc}/10`);
+    });
+  }
+  if (yontem === 'arinc') {
+    serbest.forEach(i => {
+      const v = parseFloat((document.getElementById(`arinc_${i}`) || {}).value) || 5000;
+      addParam(`  ${isimler[i]} (mevcut MTBF)`, `${fmtN(v)} saat`);
+    });
+  }
+
+  // Göster
+  document.getElementById('sonuclar').style.display = '';
+  document.getElementById('sonuclar').scrollIntoView({behavior: 'smooth'});
+}
+
+// ─── CSV ─────────────────────────────────────────────────────────────────────
+function csvIndir() {
+  if (!sonucData.length) return;
+  const yontem = document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text;
+  let csv = '\uFEFF'; // BOM for Turkish chars in Excel
+  csv += `MTBF Tahsis Sonuçlari\n`;
+  csv += `Yontem: ${yontem}\n`;
+  csv += `Sistem MTBF Hedefi: ${getSistemMtbf()} saat\n\n`;
+  csv += 'No,Birim,Tahsis Edilen MTBF (saat),Ariza Orani Lambda (ariza/saat),Sistem Lambda Icindeki Pay,Durum\n';
+  sonucData.forEach(r => {
+    csv += `${r.no},"${r.birim}","${r.mtbf}","${r.lambda}","${r.pay}","${r.durum}"\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mtbf_tahsis_${getYontem()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
