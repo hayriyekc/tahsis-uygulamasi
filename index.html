@@ -14,15 +14,22 @@
       --primary: #1d4ed8;
       --primary-dark: #1e40af;
       --secondary: #eef2ff;
-      --danger: #b91c1c;
       --success-bg: #ecfdf5;
       --success-border: #10b981;
       --warn-bg: #fff7ed;
       --warn-border: #f59e0b;
       --error-bg: #fef2f2;
       --error-border: #ef4444;
+      --target-bg: #eff6ff;
+      --target-border: #60a5fa;
+      --allocation-bg: #f5f3ff;
+      --allocation-border: #8b5cf6;
+      --performance-bg: #ecfdf5;
+      --performance-border: #10b981;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 24px;
@@ -30,10 +37,27 @@
       color: var(--text);
       background: var(--bg);
     }
-    .container { max-width: 1380px; margin: 0 auto; }
-    .page-header { margin-bottom: 20px; }
-    .page-header h1 { margin: 0 0 8px 0; font-size: 30px; }
-    .page-header p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+    .container {
+      max-width: 1420px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 20px;
+    }
+
+    .page-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 30px;
+    }
+
+    .page-header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
     .card {
       background: var(--card);
       border: 1px solid var(--line);
@@ -42,20 +66,36 @@
       margin-bottom: 16px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.04);
     }
-    .section-head, .actions-inline {
+
+    .section-head,
+    .actions-inline {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
     }
-    .grid-2, .grid-3 {
+
+    .grid-2,
+    .grid-3 {
       display: grid;
       gap: 14px;
     }
-    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .field { display: flex; flex-direction: column; gap: 8px; }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .step-badge {
       display: inline-block;
       padding: 4px 10px;
@@ -66,15 +106,27 @@
       font-weight: 700;
       margin-bottom: 10px;
     }
-    label { font-weight: 600; font-size: 14px; }
-    input, select, button { font: inherit; }
-    input, select {
+
+    label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #fff;
     }
+
     button {
       border: none;
       border-radius: 10px;
@@ -84,15 +136,28 @@
       color: #fff;
       font-weight: 600;
     }
-    button:hover { background: var(--primary-dark); }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
     button.secondary {
       background: var(--secondary);
       color: var(--text);
       border: 1px solid var(--line);
     }
-    button.secondary:hover { background: #e5e7eb; }
-    button:disabled { opacity: 0.65; cursor: not-allowed; }
-    .note, .method-help {
+
+    button.secondary:hover {
+      background: #e5e7eb;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .note,
+    .method-help {
       margin-top: 12px;
       padding: 12px;
       border-radius: 10px;
@@ -101,6 +166,7 @@
       color: var(--muted);
       line-height: 1.5;
     }
+
     .formula {
       background: #f8fafc;
       border: 1px dashed var(--line);
@@ -111,52 +177,141 @@
       white-space: pre-wrap;
       line-height: 1.45;
     }
-    .table-wrap { overflow-x: auto; }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
     }
-    th, td {
+
+    th,
+    td {
       border-bottom: 1px solid var(--line);
       padding: 10px 8px;
       text-align: left;
       vertical-align: middle;
       font-size: 14px;
     }
+
     th {
       background: #f8fafc;
       font-weight: 700;
       white-space: nowrap;
     }
-    td input { min-width: 110px; }
-    .hidden { display: none !important; }
-    #messageBox { margin-top: 14px; }
+
+    td input {
+      min-width: 110px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #messageBox {
+      margin-top: 14px;
+    }
+
     .alert {
       padding: 12px 14px;
       border-radius: 10px;
       border: 1px solid;
       line-height: 1.45;
     }
-    .alert.error { background: var(--error-bg); border-color: var(--error-border); }
-    .alert.warn { background: var(--warn-bg); border-color: var(--warn-border); }
-    .alert.success { background: var(--success-bg); border-color: var(--success-border); }
-    .summary-grid {
+
+    .alert.error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+    }
+
+    .alert.warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+    }
+
+    .alert.success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .summary-sections {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
     }
-    .summary-item {
+
+    .summary-section {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      background: #fafcff;
+      border-radius: 14px;
+      padding: 16px;
     }
-    .summary-item .k { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-    .summary-item .v { font-size: 22px; font-weight: 700; }
-    .status-fixed { color: #065f46; font-weight: 700; }
-    .status-allocated { color: #1d4ed8; font-weight: 700; }
-    .small { font-size: 12px; color: var(--muted); }
+
+    .summary-section.target {
+      background: var(--target-bg);
+      border-color: var(--target-border);
+    }
+
+    .summary-section.allocation {
+      background: var(--allocation-bg);
+      border-color: var(--allocation-border);
+    }
+
+    .summary-section.performance {
+      background: var(--performance-bg);
+      border-color: var(--performance-border);
+    }
+
+    .summary-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-item {
+      background: rgba(255,255,255,0.65);
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .summary-item .k {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .summary-item .v {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .status-fixed {
+      color: #065f46;
+      font-weight: 700;
+    }
+
+    .status-allocated {
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .status-improved {
+      color: #7c3aed;
+      font-weight: 700;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -164,8 +319,8 @@
     <header class="page-header">
       <h1>MTBF Tahsis Uygulaması</h1>
       <p>
-        MIL-HDBK-338B referanslı tahsis uygulaması. Önce sistem MTBF hedefi ve alt sistem sayısı girilir,
-        sonra satırlar oluşturulur, ardından yöntem seçilip tahsis hesaplanır.
+        MIL-HDBK-338B referanslı tahsis yöntemleri için hazırlanmış istemci tarafı web uygulaması.
+        Akış: sistem hedefi ve alt sistem sayısı girilir, yöntem seçilir, sonra ilgili giriş alanları açılır ve sonuçlar tablo halinde üretilir.
       </p>
     </header>
 
@@ -187,43 +342,12 @@
         </div>
       </div>
       <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
-        <button id="createUnitsBtn" type="button">Birimleri Oluştur</button>
         <button id="sampleBtn" type="button" class="secondary">Örnek Veri Yükle</button>
-        <button id="clearBtn" type="button" class="secondary">Temizle</button>
       </div>
     </section>
 
-    <section class="card" id="unitsCard" hidden>
+    <section class="card">
       <div class="step-badge">2. Adım</div>
-      <div class="section-head">
-        <h2>Alt Sistem Bilgileri</h2>
-        <div class="small">Sistem bilgilerini girdikten sonra satırlar burada oluşur.</div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Alt sistem adı</th>
-              <th class="col-known">Bilinen MTBF (saat)</th>
-              <th class="col-arinc hidden">ARINC baz MTBF (saat)</th>
-              <th class="col-foo hidden">Intricacy</th>
-              <th class="col-foo hidden">State-of-the-Art</th>
-              <th class="col-foo hidden">Performance Time</th>
-              <th class="col-foo hidden">Environment</th>
-            </tr>
-          </thead>
-          <tbody id="unitsBody"></tbody>
-        </table>
-      </div>
-      <div class="note">
-        <strong>Not:</strong> Bilinen MTBF girilen alt sistemler sabit kabul edilir.
-        Equal, ARINC ve FOO yöntemlerinde sistem için kalan arıza oranı yalnızca bilinmeyen alt sistemlere dağıtılır.
-      </div>
-    </section>
-
-    <section class="card" id="methodCard" hidden>
-      <div class="step-badge">3. Adım</div>
       <h2>Tahsis Yöntemi Seçimi</h2>
       <div class="grid-2">
         <div class="field">
@@ -232,27 +356,56 @@
             <option value="equal">Equal Apportionment</option>
             <option value="arinc">ARINC</option>
             <option value="foo">Feasibility of Objectives (FOO)</option>
+            <option value="min_effort">Minimization of Effort Algorithm</option>
           </select>
         </div>
       </div>
       <div class="method-help" id="methodHelp"></div>
       <div class="formula" id="formulaBox"></div>
       <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
-        <button id="calculateBtn" type="button">Tahsis Hesapla</button>
-        <button id="exportBtn" type="button" class="secondary" disabled>CSV İndir</button>
+        <button id="createUnitsBtn" type="button">3. Adımı Oluştur</button>
       </div>
       <div id="messageBox"></div>
     </section>
 
+    <section class="card" id="unitsCard" hidden>
+      <div class="step-badge">3. Adım</div>
+      <div class="section-head">
+        <h2>Alt Sistem Bilgileri</h2>
+        <div class="small" id="unitsInfoText">Seçilen yönteme göre gerekli alanlar burada gösterilir.</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Alt sistem adı</th>
+              <th class="col-known">Bilinen MTBF (saat)</th>
+              <th class="col-foo hidden">Intricacy</th>
+              <th class="col-foo hidden">State-of-the-Art</th>
+              <th class="col-foo hidden">Performance Time</th>
+              <th class="col-foo hidden">Environment</th>
+              <th class="col-min hidden">Mevcut / Baz MTBF (saat)</th>
+            </tr>
+          </thead>
+          <tbody id="unitsBody"></tbody>
+        </table>
+      </div>
+      <div class="note" id="methodSpecificNote"></div>
+      <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+        <button id="calculateBtn" type="button">Tahsis Hesapla</button>
+      </div>
+    </section>
+
     <section class="card" id="summaryCard" hidden>
       <h2>Özet</h2>
-      <div class="summary-grid" id="summaryGrid"></div>
+      <div id="summaryContent"></div>
     </section>
 
     <section class="card" id="resultsCard" hidden>
       <h2>Sonuç Tablosu</h2>
       <div class="table-wrap">
-        <table>
+        <table id="resultsTable">
           <thead>
             <tr>
               <th>Alt sistem</th>
@@ -268,24 +421,35 @@
         </table>
       </div>
     </section>
+
+    <section class="card hidden" id="finalActionsCard">
+      <div class="actions-inline" style="justify-content:flex-start;">
+        <button id="excelBtn" type="button">Excel İndir</button>
+        <button id="clearBtn" type="button" class="secondary">Temizle</button>
+      </div>
+    </section>
   </div>
 
   <script>
-    const unitCountInput = document.getElementById("unitCount");
     const systemMtbfInput = document.getElementById("systemMtbf");
     const missionTimeInput = document.getElementById("missionTime");
-    const unitsBody = document.getElementById("unitsBody");
-    const unitsCard = document.getElementById("unitsCard");
-    const methodCard = document.getElementById("methodCard");
+    const unitCountInput = document.getElementById("unitCount");
     const methodSelect = document.getElementById("method");
     const methodHelp = document.getElementById("methodHelp");
     const formulaBox = document.getElementById("formulaBox");
     const messageBox = document.getElementById("messageBox");
-    const resultsCard = document.getElementById("resultsCard");
+    const unitsCard = document.getElementById("unitsCard");
+    const unitsBody = document.getElementById("unitsBody");
+    const unitsInfoText = document.getElementById("unitsInfoText");
+    const methodSpecificNote = document.getElementById("methodSpecificNote");
     const summaryCard = document.getElementById("summaryCard");
-    const summaryGrid = document.getElementById("summaryGrid");
+    const summaryContent = document.getElementById("summaryContent");
+    const resultsCard = document.getElementById("resultsCard");
     const resultsBody = document.getElementById("resultsBody");
-    const exportBtn = document.getElementById("exportBtn");
+    const resultsTable = document.getElementById("resultsTable");
+    const finalActionsCard = document.getElementById("finalActionsCard");
+
+    let lastSummarySections = [];
 
     function fmt(v, d = 6) {
       if (v === null || v === undefined || Number.isNaN(v)) return "-";
@@ -318,39 +482,97 @@
 
     function getMethodDescription(method) {
       if (method === "equal") {
-        return "Equal Apportionment: bilinmeyen alt sistemler arasında kalan sistem arıza oranı eşit bölünür. Elinizde ek teknik veri yoksa hızlı başlangıç için uygundur.";
+        return "Equal Apportionment: sistem hedef güvenilirliği, bilinmeyen alt sistemlere eşit güvenilirlik hedefi olarak dağıtılır. Bu gösterim handbook mantığına uygun olarak reliability temellidir.";
       }
       if (method === "arinc") {
-        return "ARINC: bilinmeyen alt sistemlerin baz MTBF değerlerinden türetilen baz arıza oranları ağırlık olarak kullanılır. Görece daha problemli olması beklenen alt sisteme daha büyük λ payı verilir.";
+        return "ARINC: her alt sistem için tek bir MTBF girdisi alınır ve bu değerler baz alınarak arıza oranı ağırlıkları hesaplanır. Ayrı bir ARINC sütunu kullanılmaz.";
       }
-      return "FOO: Intricacy, State-of-the-Art, Performance Time ve Environment puanlarının çarpımı normalize edilerek ağırlık oluşturulur. Mühendislik değerlendirmesini tahsise yansıtır.";
+      if (method === "foo") {
+        return "FOO: Intricacy, State-of-the-Art, Performance Time ve Environment puanlarının çarpımı normalize edilerek ağırlık oluşturulur. Bilinen MTBF girilen alt sistemler sabit tutulabilir.";
+      }
+      return "Minimization of Effort Algorithm: mevcut alt sistem güvenilirliklerinden başlanır. Görev süresindeki güvenilirlikler ortak eşik seviyesine getirilerek toplam iyileştirme çabası en aza indirilmeye çalışılır.";
     }
 
     function getMethodFormula(method) {
       if (method === "equal") {
-        return `λ_sys = 1 / MTBF_sys
-λ_remaining = λ_sys - toplam λ_known
-λ_i = λ_remaining / n_unknown
+        return `R_sys(T) = exp(-T / MTBF_sys)
+R_known(T) = çarpım halinde sabit alt sistem güvenilirlikleri
+R_remaining(T) = R_sys(T) / R_known(T)
+R_i(T) = [R_remaining(T)]^(1 / n_unknown)
+λ_i = -ln(R_i(T)) / T
 MTBF_i = 1 / λ_i`;
       }
       if (method === "arinc") {
-        return `λ_base,i = 1 / MTBF_base,i
+        return `Her alt sistem için girilen MTBF_i baz alınır
+λ_base,i = 1 / MTBF_i
 w_i = λ_base,i / toplam λ_base
+λ_i = w_i × λ_sys
+MTBF_i,target = 1 / λ_i`;
+      }
+      if (method === "foo") {
+        return `score_i = Intricacy × State × Performance × Environment
+w_i = score_i / toplam score
+λ_remaining = λ_sys - toplam λ_known
 λ_i = w_i × λ_remaining
 MTBF_i = 1 / λ_i`;
       }
-      return `score_i = Intricacy × State × Performance × Environment
-w_i = score_i / toplam score
-λ_i = w_i × λ_remaining
-MTBF_i = 1 / λ_i`;
+      return `R_sys(T) = exp(-T / MTBF_sys)
+R_base,i(T) = exp(-T / MTBF_base,i)
+Baz güvenilirlikler küçükten büyüğe sıralanır
+Gerekli alt sistemler ortak a eşiğine yükseltilir
+çarpım max(R_base,i, a) = R_sys(T)
+λ_i = -ln(R_i,target) / T
+MTBF_i,target = 1 / λ_i`;
+    }
+
+    function getMethodNote(method) {
+      if (method === "equal") {
+        return "Equal yönteminde Bilinen MTBF girilen alt sistemler sabit kabul edilir. Bilinmeyen alt sistemler için kalan güvenilirlik eşit hedefe bölünür.";
+      }
+      if (method === "arinc") {
+        return "ARINC yönteminde her alt sistem için sadece tek bir MTBF değeri girilir. Bu değer sabit hedef değil, ağırlık hesabında kullanılan baz girdidir. Tüm satırlar için doldurulmalıdır.";
+      }
+      if (method === "foo") {
+        return "FOO yönteminde Bilinen MTBF girilen alt sistemler sabit kabul edilir. Bilinmeyen alt sistemler için 4 puan alanı zorunludur.";
+      }
+      return "Minimization of Effort yönteminde tüm alt sistemler için Mevcut / Baz MTBF girilmelidir. Bu yöntem sabit alt sistem mantığıyla çalışmaz.";
+    }
+
+    function updateMethodTexts() {
+      const method = methodSelect.value;
+      methodHelp.textContent = getMethodDescription(method);
+      formulaBox.textContent = getMethodFormula(method);
+      methodSpecificNote.textContent = getMethodNote(method);
+
+      if (method === "arinc") {
+        unitsInfoText.textContent = "ARINC için her satıra tek bir baz MTBF değeri girin. Ayrı ARINC sütunu yoktur; aynı MTBF alanı kullanılır.";
+      } else if (method === "min_effort") {
+        unitsInfoText.textContent = "Minimization of Effort için her satıra Mevcut / Baz MTBF girin. Bu alanlar hedef değil mevcut durum girdileridir.";
+      } else if (method === "foo") {
+        unitsInfoText.textContent = "FOO için alt sistem adlarını, varsa bilinen MTBF değerlerini ve bilinmeyenler için 4 puanı girin.";
+      } else {
+        unitsInfoText.textContent = "Equal yöntemi için alt sistem adlarını ve varsa bilinen MTBF değerlerini girin.";
+      }
     }
 
     function updateMethodUI() {
       const method = methodSelect.value;
-      methodHelp.textContent = getMethodDescription(method);
-      formulaBox.textContent = getMethodFormula(method);
-      document.querySelectorAll(".col-arinc").forEach(el => el.classList.toggle("hidden", method !== "arinc"));
-      document.querySelectorAll(".col-foo").forEach(el => el.classList.toggle("hidden", method !== "foo"));
+      updateMethodTexts();
+      const showFoo = method === "foo";
+      const showMin = method === "min_effort";
+      document.querySelectorAll(".col-foo").forEach(el => el.classList.toggle("hidden", !showFoo));
+      document.querySelectorAll(".col-min").forEach(el => el.classList.toggle("hidden", !showMin));
+
+      const labelHeader = document.querySelector(".col-known");
+      if (method === "arinc") {
+        labelHeader.textContent = "Baz / Bilinen MTBF (saat)";
+        labelHeader.classList.remove("hidden");
+      } else if (method === "min_effort") {
+        labelHeader.classList.add("hidden");
+      } else {
+        labelHeader.textContent = "Bilinen MTBF (saat)";
+        labelHeader.classList.remove("hidden");
+      }
     }
 
     function createInput(type, className, placeholder, min, step) {
@@ -363,8 +585,19 @@ MTBF_i = 1 / λ_i`;
       return input;
     }
 
+    function clearResults() {
+      summaryContent.innerHTML = "";
+      resultsBody.innerHTML = "";
+      summaryCard.hidden = true;
+      resultsCard.hidden = true;
+      finalActionsCard.classList.add("hidden");
+      lastSummarySections = [];
+    }
+
     function createRows(count) {
       unitsBody.innerHTML = "";
+      const method = methodSelect.value;
+
       for (let i = 1; i <= count; i += 1) {
         const tr = document.createElement("tr");
 
@@ -380,18 +613,12 @@ MTBF_i = 1 / λ_i`;
 
         const tdKnown = document.createElement("td");
         tdKnown.className = "col-known";
-        const known = createInput("number", "known-mtbf", "Opsiyonel", "0", "any");
+        const knownPlaceholder = method === "arinc" ? "Zorunlu" : "Opsiyonel";
+        const known = createInput("number", "known-mtbf", knownPlaceholder, "0", "any");
         tdKnown.appendChild(known);
         tr.appendChild(tdKnown);
 
-        const tdArinc = document.createElement("td");
-        tdArinc.className = "col-arinc hidden";
-        const arinc = createInput("number", "arinc-mtbf", "ARINC için", "0", "any");
-        tdArinc.appendChild(arinc);
-        tr.appendChild(tdArinc);
-
-        const fooFields = ["intricacy", "state", "performance", "environment"];
-        fooFields.forEach(cls => {
+        ["intricacy", "state", "performance", "environment"].forEach(cls => {
           const td = document.createElement("td");
           td.className = "col-foo hidden";
           const inp = createInput("number", `foo-${cls}`, "1-10", "1", "1");
@@ -400,10 +627,16 @@ MTBF_i = 1 / λ_i`;
           tr.appendChild(td);
         });
 
+        const tdMin = document.createElement("td");
+        tdMin.className = "col-min hidden";
+        const minInp = createInput("number", "min-mtbf", "Zorunlu", "0", "any");
+        tdMin.appendChild(minInp);
+        tr.appendChild(tdMin);
+
         unitsBody.appendChild(tr);
       }
+
       unitsCard.hidden = false;
-      methodCard.hidden = false;
       updateMethodUI();
     }
 
@@ -423,16 +656,16 @@ MTBF_i = 1 / λ_i`;
       return Array.from(unitsBody.querySelectorAll("tr")).map((tr, i) => ({
         index: i + 1,
         name: tr.querySelector(".unit-name").value.trim(),
-        knownMtbf: positiveOrNull(tr.querySelector(".known-mtbf").value),
-        arincMtbf: positiveOrNull(tr.querySelector(".arinc-mtbf").value),
-        intricacy: int1to10OrNull(tr.querySelector(".foo-intricacy").value),
-        state: int1to10OrNull(tr.querySelector(".foo-state").value),
-        performance: int1to10OrNull(tr.querySelector(".foo-performance").value),
-        environment: int1to10OrNull(tr.querySelector(".foo-environment").value)
+        knownMtbf: positiveOrNull(tr.querySelector(".known-mtbf") ? tr.querySelector(".known-mtbf").value : null),
+        intricacy: int1to10OrNull(tr.querySelector(".foo-intricacy") ? tr.querySelector(".foo-intricacy").value : null),
+        state: int1to10OrNull(tr.querySelector(".foo-state") ? tr.querySelector(".foo-state").value : null),
+        performance: int1to10OrNull(tr.querySelector(".foo-performance") ? tr.querySelector(".foo-performance").value : null),
+        environment: int1to10OrNull(tr.querySelector(".foo-environment") ? tr.querySelector(".foo-environment").value : null),
+        minMtbf: positiveOrNull(tr.querySelector(".min-mtbf") ? tr.querySelector(".min-mtbf").value : null)
       }));
     }
 
-    function validateBeforeCreate() {
+    function validateBaseInputs() {
       const systemMtbf = Number(systemMtbfInput.value);
       const missionTime = Number(missionTimeInput.value);
       const unitCount = Number(unitCountInput.value);
@@ -442,108 +675,68 @@ MTBF_i = 1 / λ_i`;
       return null;
     }
 
-    function validateInputs(systemMtbf, missionTime, units, method) {
+    function validateUnits(systemMtbf, missionTime, units, method) {
       if (!Number.isFinite(systemMtbf) || systemMtbf <= 0) return "Sistem MTBF hedefi pozitif olmalıdır.";
       if (!Number.isFinite(missionTime) || missionTime <= 0) return "Görev süresi T pozitif olmalıdır.";
-      if (units.length === 0) return "Önce alt sistem satırlarını oluşturmalısınız.";
+      if (units.length === 0) return "Önce 3. adımı oluşturmalısınız.";
+
       for (const u of units) {
         if (!u.name) return `${u.index}. satırda alt sistem adı boş bırakılamaz.`;
       }
+
       if (method === "arinc") {
-        for (const u of units.filter(x => !x.knownMtbf)) {
-          if (!u.arincMtbf) return `ARINC için ${u.name} alt sistemine baz MTBF girmelisiniz.`;
+        for (const u of units) {
+          if (!u.knownMtbf) return `ARINC için ${u.name} alt sistemine baz MTBF girmelisiniz.`;
         }
       }
+
       if (method === "foo") {
         for (const u of units.filter(x => !x.knownMtbf)) {
           const vals = [u.intricacy, u.state, u.performance, u.environment];
           if (vals.some(v => v === null)) return `FOO için ${u.name} alt sistemine 4 puanın tamamını 1-10 arasında girmelisiniz.`;
         }
       }
+
+      if (method === "min_effort") {
+        for (const u of units) {
+          if (!u.minMtbf) return `Minimization of Effort için ${u.name} alt sistemine Mevcut / Baz MTBF girmelisiniz.`;
+        }
+      }
+
       return null;
     }
 
-    function allocateEqual(unknownUnits, lambdaRemaining) {
-      const each = lambdaRemaining / unknownUnits.length;
-      return unknownUnits.map(u => ({
-        ...u,
-        weight: 1 / unknownUnits.length,
-        allocatedLambda: each,
-        note: "Eşit λ payı"
-      }));
-    }
-
-    function allocateArinc(unknownUnits, lambdaRemaining) {
-      const lambdas = unknownUnits.map(u => 1 / u.arincMtbf);
-      const sum = lambdas.reduce((a, b) => a + b, 0);
-      return unknownUnits.map((u, i) => {
-        const w = lambdas[i] / sum;
-        return {
-          ...u,
-          weight: w,
-          allocatedLambda: w * lambdaRemaining,
-          note: "Baz arıza oranına göre"
-        };
-      });
-    }
-
-    function allocateFoo(unknownUnits, lambdaRemaining) {
-      const scores = unknownUnits.map(u => u.intricacy * u.state * u.performance * u.environment);
-      const sum = scores.reduce((a, b) => a + b, 0);
-      return unknownUnits.map((u, i) => {
-        const w = scores[i] / sum;
-        return {
-          ...u,
-          weight: w,
-          allocatedLambda: w * lambdaRemaining,
-          note: `FOO skoru = ${scores[i]}`
-        };
-      });
-    }
-
-    function calculate() {
-      clearMessage();
-      resultsBody.innerHTML = "";
-      summaryGrid.innerHTML = "";
-      resultsCard.hidden = true;
-      summaryCard.hidden = true;
-      exportBtn.disabled = true;
-
-      const systemMtbf = Number(systemMtbfInput.value);
-      const missionTime = Number(missionTimeInput.value);
-      const method = methodSelect.value;
-      const units = collectUnits();
-
-      const err = validateInputs(systemMtbf, missionTime, units, method);
-      if (err) {
-        showMessage("error", err);
-        return;
-      }
-
-      const systemLambda = 1 / systemMtbf;
+    function allocateEqual(systemMtbf, missionTime, units) {
+      const systemR = Math.exp(-missionTime / systemMtbf);
       const fixedUnits = units.filter(u => !!u.knownMtbf);
       const unknownUnits = units.filter(u => !u.knownMtbf);
-      const fixedLambdaSum = fixedUnits.reduce((s, u) => s + 1 / u.knownMtbf, 0);
-      const lambdaRemaining = systemLambda - fixedLambdaSum;
 
-      if (unknownUnits.length === 0 && Math.abs(lambdaRemaining) > 0.000000000001) {
-        showMessage("error", "Tüm alt sistemler sabit girilmiş. Sistem hedefi ile bilinen alt sistem değerleri uyumlu değilse tahsis yapılamaz.");
-        return;
+      const knownRProduct = fixedUnits.reduce((prod, u) => prod * Math.exp(-missionTime / u.knownMtbf), 1);
+      const remainingR = systemR / knownRProduct;
+
+      if (remainingR <= 0) {
+        throw new Error("Equal tahsis için kalan güvenilirlik değeri hesaplanamadı.");
       }
 
-      if (lambdaRemaining < -0.000000000000001) {
-        showMessage("error", `Bilinen alt sistemlerin λ toplamı ${sci(fixedLambdaSum)} ve sistem hedef λ değeri ${sci(systemLambda)}. Bilinen değerler sistemi aşıyor.`);
-        return;
+      if (unknownUnits.length === 0) {
+        return units.map(u => {
+          const lambda = 1 / u.knownMtbf;
+          return {
+            ...u,
+            status: "Sabit / bilinen",
+            weight: null,
+            allocatedLambda: lambda,
+            allocatedMtbf: u.knownMtbf,
+            finalR: Math.exp(-lambda * missionTime),
+            note: "Manuel sabit MTBF"
+          };
+        });
       }
 
-      let allocatedUnknown = [];
-      if (unknownUnits.length > 0) {
-        if (method === "equal") allocatedUnknown = allocateEqual(unknownUnits, lambdaRemaining);
-        else if (method === "arinc") allocatedUnknown = allocateArinc(unknownUnits, lambdaRemaining);
-        else allocatedUnknown = allocateFoo(unknownUnits, lambdaRemaining);
-      }
+      const eachR = Math.pow(remainingR, 1 / unknownUnits.length);
+      const eachLambda = -Math.log(eachR) / missionTime;
 
-      const finalUnits = units.map(u => {
+      return units.map(u => {
         if (u.knownMtbf) {
           const lambda = 1 / u.knownMtbf;
           return {
@@ -557,47 +750,191 @@ MTBF_i = 1 / λ_i`;
           };
         }
 
-        const found = allocatedUnknown.find(x => x.index === u.index);
-        const lambda = found ? found.allocatedLambda : null;
         return {
           ...u,
           status: "Tahsis edildi",
-          weight: found ? found.weight : null,
-          allocatedLambda: lambda,
-          allocatedMtbf: lambda ? 1 / lambda : null,
-          finalR: lambda ? Math.exp(-lambda * missionTime) : null,
-          note: found ? found.note : ""
+          weight: 1 / unknownUnits.length,
+          allocatedLambda: eachLambda,
+          allocatedMtbf: 1 / eachLambda,
+          finalR: eachR,
+          note: "Eşit güvenilirlik hedefi"
         };
       });
+    }
 
+    function allocateArinc(systemMtbf, missionTime, units) {
+      const systemLambda = 1 / systemMtbf;
+      const baseLambdas = units.map(u => 1 / u.knownMtbf);
+      const sumBase = baseLambdas.reduce((a, b) => a + b, 0);
+
+      return units.map((u, i) => {
+        const weight = baseLambdas[i] / sumBase;
+        const lambda = weight * systemLambda;
+        return {
+          ...u,
+          status: "Tahsis edildi",
+          weight,
+          allocatedLambda: lambda,
+          allocatedMtbf: 1 / lambda,
+          finalR: Math.exp(-lambda * missionTime),
+          note: "ARINC ağırlığı aynı MTBF girdisinden türetildi"
+        };
+      });
+    }
+
+    function allocateFoo(systemMtbf, missionTime, units) {
+      const systemLambda = 1 / systemMtbf;
+      const fixedUnits = units.filter(u => !!u.knownMtbf);
+      const unknownUnits = units.filter(u => !u.knownMtbf);
+      const fixedLambdaSum = fixedUnits.reduce((s, u) => s + 1 / u.knownMtbf, 0);
+      const lambdaRemaining = systemLambda - fixedLambdaSum;
+
+      if (lambdaRemaining < -0.000000000000001) {
+        throw new Error(`Bilinen alt sistemlerin λ toplamı ${sci(fixedLambdaSum)} ve sistem hedef λ değeri ${sci(systemLambda)}. Bilinen değerler sistemi aşıyor.`);
+      }
+
+      const scores = unknownUnits.map(u => u.intricacy * u.state * u.performance * u.environment);
+      const scoreSum = scores.reduce((a, b) => a + b, 0);
+
+      return units.map(u => {
+        if (u.knownMtbf) {
+          const lambda = 1 / u.knownMtbf;
+          return {
+            ...u,
+            status: "Sabit / bilinen",
+            weight: null,
+            allocatedLambda: lambda,
+            allocatedMtbf: u.knownMtbf,
+            finalR: Math.exp(-lambda * missionTime),
+            note: "Manuel sabit MTBF"
+          };
+        }
+
+        const idx = unknownUnits.findIndex(x => x.index === u.index);
+        const weight = scores[idx] / scoreSum;
+        const lambda = weight * lambdaRemaining;
+        return {
+          ...u,
+          status: "Tahsis edildi",
+          weight,
+          allocatedLambda: lambda,
+          allocatedMtbf: 1 / lambda,
+          finalR: Math.exp(-lambda * missionTime),
+          note: `FOO skoru = ${scores[idx]}`
+        };
+      });
+    }
+
+    function solveMinEffortThreshold(baseRs, targetR) {
+      const sorted = baseRs.slice().sort((a, b) => a - b);
+      const n = sorted.length;
+
+      for (let k = 1; k <= n; k += 1) {
+        let prodAbove = 1;
+        for (let i = k; i < n; i += 1) prodAbove *= sorted[i];
+        const a = Math.pow(targetR / prodAbove, 1 / k);
+        const lower = k === 1 ? 0 : sorted[k - 2];
+        const upper = sorted[k - 1];
+        if (a >= lower - 0.000000000001 && a <= upper + 0.000000000001) return a;
+      }
+      return null;
+    }
+
+    function allocateMinEffort(systemMtbf, missionTime, units) {
+      const targetSystemR = Math.exp(-missionTime / systemMtbf);
+      const baseRs = units.map(u => Math.exp(-missionTime / u.minMtbf));
+      const threshold = solveMinEffortThreshold(baseRs, targetSystemR);
+      if (threshold === null) throw new Error("Minimization of Effort eşiği çözülemedi.");
+
+      return units.map(u => {
+        const baseR = Math.exp(-missionTime / u.minMtbf);
+        const targetR = Math.max(baseR, threshold);
+        const lambda = -Math.log(targetR) / missionTime;
+        return {
+          ...u,
+          status: targetR > baseR + 0.000000000001 ? "İyileştirildi" : "Sabit kaldı",
+          weight: null,
+          allocatedLambda: lambda,
+          allocatedMtbf: 1 / lambda,
+          finalR: targetR,
+          note: targetR > baseR + 0.000000000001 ? `R(T) ${fmt(baseR, 8)} -> ${fmt(targetR, 8)}` : "İyileştirme gerekmedi"
+        };
+      });
+    }
+
+    function buildSummarySections(method, systemMtbf, missionTime, finalUnits) {
       const totalLambda = finalUnits.reduce((s, u) => s + (u.allocatedLambda || 0), 0);
+      const targetLambda = 1 / systemMtbf;
+      const targetR = Math.exp(-missionTime / systemMtbf);
       const achievedMtbf = totalLambda > 0 ? 1 / totalLambda : null;
-      const targetR = Math.exp(-systemLambda * missionTime);
       const achievedR = totalLambda > 0 ? Math.exp(-totalLambda * missionTime) : null;
+      const fixedCount = finalUnits.filter(u => u.status === "Sabit / bilinen").length;
+      const improvedCount = finalUnits.filter(u => u.status === "İyileştirildi").length;
+      const allocatedCount = finalUnits.filter(u => u.status === "Tahsis edildi").length;
 
-      const summaryItems = [
-        { k: "Seçilen yöntem", v: method.toUpperCase() },
-        { k: "Hedef sistem MTBF", v: `${fmt(systemMtbf, 4)} saat` },
-        { k: "Alt sistem sayısı", v: String(units.length) },
-        { k: "Hedef sistem λ", v: sci(systemLambda) },
-        { k: "Bilinen alt sistem λ toplamı", v: sci(fixedLambdaSum) },
-        { k: "Dağıtılan kalan λ", v: sci(Math.max(lambdaRemaining, 0)) },
-        { k: "Hedef sistem R(T)", v: fmt(targetR, 8) },
-        { k: "Elde edilen sistem R(T)", v: achievedR !== null ? fmt(achievedR, 8) : "-" },
-        { k: "Elde edilen sistem MTBF", v: achievedMtbf !== null ? `${fmt(achievedMtbf, 4)} saat` : "-" }
-      ];
+      const section1 = {
+        category: "target",
+        title: "Hedef Bilgileri",
+        items: [
+          { k: "Yöntem", v: method.toUpperCase() },
+          { k: "Sistem MTBF hedefi", v: `${fmt(systemMtbf, 4)} saat` },
+          { k: "Görev süresi", v: `${fmt(missionTime, 4)} saat` },
+          { k: "Hedef sistem λ", v: sci(targetLambda) },
+          { k: "Hedef sistem R(T)", v: fmt(targetR, 8) }
+        ]
+      };
 
-      summaryGrid.innerHTML = summaryItems.map(item => `
-        <div class="summary-item">
-          <div class="k">${item.k}</div>
-          <div class="v">${item.v}</div>
+      const section2 = {
+        category: "allocation",
+        title: "Tahsis Özeti",
+        items: [
+          { k: "Toplam alt sistem", v: String(finalUnits.length) },
+          { k: "Sabit tutulan", v: String(fixedCount) },
+          { k: "Tahsis edilen", v: String(allocatedCount) },
+          { k: "İyileştirilen", v: String(improvedCount) },
+          { k: "Toplam tahsis λ", v: sci(totalLambda) }
+        ]
+      };
+
+      const section3 = {
+        category: "performance",
+        title: "Sonuç Performansı",
+        items: [
+          { k: "Elde edilen sistem MTBF", v: achievedMtbf !== null ? `${fmt(achievedMtbf, 4)} saat` : "-" },
+          { k: "Elde edilen sistem R(T)", v: achievedR !== null ? fmt(achievedR, 8) : "-" },
+          { k: "MTBF farkı", v: achievedMtbf !== null ? `${fmt(achievedMtbf - systemMtbf, 4)} saat` : "-" },
+          { k: "R(T) farkı", v: achievedR !== null ? fmt(achievedR - targetR, 8) : "-" }
+        ]
+      };
+
+      return [section1, section2, section3];
+    }
+
+    function renderSummary(sections) {
+      summaryContent.innerHTML = `
+        <div class="summary-sections">
+          ${sections.map(section => `
+            <div class="summary-section ${section.category}">
+              <h3>${escapeHtml(section.title)}</h3>
+              <div class="summary-list">
+                ${section.items.map(item => `
+                  <div class="summary-item">
+                    <div class="k">${escapeHtml(item.k)}</div>
+                    <div class="v">${escapeHtml(item.v)}</div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("");
+      `;
+    }
 
+    function renderResults(finalUnits) {
       resultsBody.innerHTML = finalUnits.map(u => `
         <tr>
           <td>${escapeHtml(u.name)}</td>
-          <td class="${u.knownMtbf ? "status-fixed" : "status-allocated"}">${u.status}</td>
+          <td class="${u.status === "Sabit / bilinen" || u.status === "Sabit kaldı" ? "status-fixed" : (u.status === "İyileştirildi" ? "status-improved" : "status-allocated")}">${escapeHtml(u.status)}</td>
           <td>${u.weight === null ? "-" : fmt(u.weight, 6)}</td>
           <td>${sci(u.allocatedLambda)}</td>
           <td>${u.allocatedMtbf ? fmt(u.allocatedMtbf, 4) : "-"}</td>
@@ -605,25 +942,82 @@ MTBF_i = 1 / λ_i`;
           <td>${escapeHtml(u.note || "")}</td>
         </tr>
       `).join("");
+    }
 
-      resultsCard.hidden = false;
+    function calculate() {
+      clearMessage();
+      clearResults();
+
+      const systemMtbf = Number(systemMtbfInput.value);
+      const missionTime = Number(missionTimeInput.value);
+      const method = methodSelect.value;
+      const units = collectUnits();
+
+      const validation = validateUnits(systemMtbf, missionTime, units, method);
+      if (validation) {
+        showMessage("error", validation);
+        return;
+      }
+
+      let finalUnits = [];
+
+      try {
+        if (method === "equal") finalUnits = allocateEqual(systemMtbf, missionTime, units);
+        else if (method === "arinc") finalUnits = allocateArinc(systemMtbf, missionTime, units);
+        else if (method === "foo") finalUnits = allocateFoo(systemMtbf, missionTime, units);
+        else finalUnits = allocateMinEffort(systemMtbf, missionTime, units);
+      } catch (error) {
+        showMessage("error", error.message);
+        return;
+      }
+
+      lastSummarySections = buildSummarySections(method, systemMtbf, missionTime, finalUnits);
+      renderSummary(lastSummarySections);
+      renderResults(finalUnits);
       summaryCard.hidden = false;
-      exportBtn.disabled = false;
+      resultsCard.hidden = false;
+      finalActionsCard.classList.remove("hidden");
       showMessage("success", "Tahsis hesaplaması tamamlandı. Sonuçlar aşağıda oluşturuldu.");
     }
 
-    function exportCsv() {
-      const rows = [["Alt Sistem", "Durum", "Ağırlık", "Tahsis Lambda", "Tahsis MTBF", "R(T)", "Not"]];
-      Array.from(resultsBody.querySelectorAll("tr")).forEach(tr => {
-        rows.push(Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim()));
-      });
-      const csv = rows.map(row => row.map(cell => `"${String(cell).split('"').join('""')}"`).join(",")).join(`
-`);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    function createExcelHtml() {
+      const summaryHtml = lastSummarySections.map(section => `
+        <table border="1" style="border-collapse:collapse; margin-bottom:14px;">
+          <tr><th colspan="2">${escapeHtml(section.title)}</th></tr>
+          ${section.items.map(item => `<tr><td>${escapeHtml(item.k)}</td><td>${escapeHtml(item.v)}</td></tr>`).join("")}
+        </table>
+      `).join("");
+
+      const rowsHtml = Array.from(resultsBody.querySelectorAll("tr")).map(tr => {
+        const cells = Array.from(tr.querySelectorAll("td")).map(td => `<td>${escapeHtml(td.textContent.trim())}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+
+      const headerCells = Array.from(resultsTable.querySelectorAll("thead th")).map(th => `<th>${escapeHtml(th.textContent.trim())}</th>`).join("");
+
+      return `
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body>
+          <h2>MTBF Tahsis Özeti</h2>
+          ${summaryHtml}
+          <h2>Sonuç Tablosu</h2>
+          <table border="1" style="border-collapse:collapse;">
+            <thead><tr>${headerCells}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+        </html>
+      `;
+    }
+
+    function downloadExcel() {
+      const excelHtml = createExcelHtml();
+      const blob = new Blob([excelHtml], { type: "application/vnd.ms-excel;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "mtbf_tahsis_sonuclari.csv";
+      a.download = "mtbf_tahsis_sonuclari.xls";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -632,48 +1026,39 @@ MTBF_i = 1 / λ_i`;
 
     function createUnitsFlow() {
       clearMessage();
-      const err = validateBeforeCreate();
-      if (err) {
-        showMessage("error", err);
+      clearResults();
+
+      const validation = validateBaseInputs();
+      if (validation) {
+        showMessage("error", validation);
         return;
       }
+
       const count = Number(unitCountInput.value);
       createRows(count);
-      resultsCard.hidden = true;
-      summaryCard.hidden = true;
-      exportBtn.disabled = true;
-      showMessage("success", `${count} adet alt sistem satırı oluşturuldu. Şimdi alt sistem bilgilerini doldurup tahsis yöntemini seçebilirsiniz.`);
+      showMessage("success", `${count} adet alt sistem satırı oluşturuldu. Şimdi seçilen yönteme göre gerekli değerleri doldurup tahsis hesabı yapabilirsiniz.`);
     }
 
     function loadSample() {
       systemMtbfInput.value = "12000";
       missionTimeInput.value = "10";
       unitCountInput.value = "4";
-      createRows(4);
-      methodSelect.value = "foo";
+      methodSelect.value = "min_effort";
       updateMethodUI();
+      createRows(4);
 
       const rows = Array.from(unitsBody.querySelectorAll("tr"));
       rows[0].querySelector(".unit-name").value = "Güç Birimi";
-      rows[0].querySelector(".foo-intricacy").value = "5";
-      rows[0].querySelector(".foo-state").value = "4";
-      rows[0].querySelector(".foo-performance").value = "10";
-      rows[0].querySelector(".foo-environment").value = "6";
+      rows[0].querySelector(".min-mtbf").value = "16000";
 
       rows[1].querySelector(".unit-name").value = "Kontrol Kartı";
-      rows[1].querySelector(".foo-intricacy").value = "8";
-      rows[1].querySelector(".foo-state").value = "6";
-      rows[1].querySelector(".foo-performance").value = "10";
-      rows[1].querySelector(".foo-environment").value = "5";
+      rows[1].querySelector(".min-mtbf").value = "9000";
 
       rows[2].querySelector(".unit-name").value = "RF Modül";
-      rows[2].querySelector(".foo-intricacy").value = "9";
-      rows[2].querySelector(".foo-state").value = "7";
-      rows[2].querySelector(".foo-performance").value = "8";
-      rows[2].querySelector(".foo-environment").value = "6";
+      rows[2].querySelector(".min-mtbf").value = "7000";
 
       rows[3].querySelector(".unit-name").value = "Ekran Alt Sistemi";
-      rows[3].querySelector(".known-mtbf").value = "60000";
+      rows[3].querySelector(".min-mtbf").value = "20000";
 
       showMessage("success", "Örnek veri yüklendi. İstersen doğrudan tahsis hesabı yapabilirsin.");
     }
@@ -682,25 +1067,23 @@ MTBF_i = 1 / λ_i`;
       systemMtbfInput.value = "";
       missionTimeInput.value = "10";
       unitCountInput.value = "";
-      unitsBody.innerHTML = "";
       methodSelect.value = "equal";
+      unitsBody.innerHTML = "";
       unitsCard.hidden = true;
-      methodCard.hidden = true;
-      resultsBody.innerHTML = "";
-      summaryGrid.innerHTML = "";
-      resultsCard.hidden = true;
-      summaryCard.hidden = true;
-      exportBtn.disabled = true;
+      clearResults();
       clearMessage();
       updateMethodUI();
     }
 
     document.getElementById("createUnitsBtn").addEventListener("click", createUnitsFlow);
-    document.getElementById("sampleBtn").addEventListener("click", loadSample);
-    document.getElementById("clearBtn").addEventListener("click", clearAll);
     document.getElementById("calculateBtn").addEventListener("click", calculate);
-    document.getElementById("exportBtn").addEventListener("click", exportCsv);
-    methodSelect.addEventListener("change", updateMethodUI);
+    document.getElementById("sampleBtn").addEventListener("click", loadSample);
+    document.getElementById("excelBtn").addEventListener("click", downloadExcel);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+    methodSelect.addEventListener("change", () => {
+      updateMethodUI();
+      if (!unitsCard.hidden) updateMethodUI();
+    });
 
     updateMethodUI();
   </script>
