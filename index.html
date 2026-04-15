@@ -1,1073 +1,708 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MTBF Tahsis Uygulaması</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
-  :root {
-    --bg:        #0d1117;
-    --bg2:       #161b22;
-    --bg3:       #21262d;
-    --border:    #30363d;
-    --border2:   #484f58;
-    --text:      #e6edf3;
-    --text2:     #8b949e;
-    --text3:     #6e7681;
-    --accent:    #58a6ff;
-    --accent2:   #1f6feb;
-    --green:     #3fb950;
-    --orange:    #d29922;
-    --red:       #f85149;
-    --mono:      'IBM Plex Mono', monospace;
-    --sans:      'IBM Plex Sans', sans-serif;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  /* HEADER */
-  .header {
-    border-bottom: 1px solid var(--border);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--bg2);
-  }
-  .header-icon {
-    width: 36px; height: 36px;
-    background: var(--accent2);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .header h1 { font-size: 18px; font-weight: 600; color: var(--text); }
-  .header p  { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-top: 1px; }
-
-  /* LAYOUT */
-  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
-
-  /* STEPS */
-  .step {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .step-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--bg3);
-  }
-  .step-num {
-    width: 24px; height: 24px;
-    background: var(--accent2);
-    color: #fff;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 600; flex-shrink: 0;
-  }
-  .step-header h2 { font-size: 14px; font-weight: 600; color: var(--text); }
-  .step-header span { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
-  .step-body { padding: 20px; }
-
-  /* FORM ELEMENTS */
-  label.field-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text2);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  input[type=text], input[type=number], select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    padding: 8px 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input[type=text]:focus, input[type=number]:focus, select:focus {
-    border-color: var(--accent);
-  }
-  select option { background: var(--bg2); }
-
-  input[type=range] {
-    width: 100%;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-
-  .field-group { margin-bottom: 16px; }
-
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-
-  @media (max-width: 700px) {
-    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 480px) {
-    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
-  }
-
-  /* INFO / WARN BOXES */
-  .info-box, .warn-box, .success-box {
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 13px;
-    margin-bottom: 14px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  .info-box    { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); color: #a5c8ff; }
-  .warn-box    { background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.3);  color: #e3b341; }
-  .success-box { background: rgba(63,185,80,0.08);  border: 1px solid rgba(63,185,80,0.3);   color: #7ee787; }
-  .info-box .icon, .warn-box .icon, .success-box .icon { flex-shrink: 0; font-size: 15px; }
-
-  /* MONO VALUE DISPLAY */
-  .mono-val {
-    font-family: var(--mono);
-    color: var(--accent);
-    font-size: 13px;
-  }
-
-  /* METHOD CARD */
-  .method-desc {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent2);
-    border-radius: 0 6px 6px 0;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 16px;
-  }
-  .method-desc strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 13px; }
-
-  /* BIRIM CARD */
-  .birim-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 12px;
-  }
-  .birim-card-header {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    font-family: var(--mono);
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* SLIDER WITH VALUE */
-  .slider-row { display: flex; align-items: center; gap: 10px; }
-  .slider-row input[type=range] { flex: 1; }
-  .slider-val {
-    min-width: 28px;
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent);
-    text-align: right;
-  }
-
-  /* PREVIEW TABLE */
-  .preview-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 10px;
-  }
-  .preview-table th {
-    background: var(--bg3);
-    color: var(--text2);
-    font-weight: 500;
-    text-align: left;
-    padding: 7px 10px;
-    border: 1px solid var(--border);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .preview-table td {
-    padding: 7px 10px;
-    border: 1px solid var(--border);
-    font-family: var(--mono);
-    color: var(--text);
-  }
-  .preview-table tr:hover td { background: var(--bg3); }
-  .td-name { font-family: var(--sans) !important; font-weight: 500; }
-  .td-sabit { color: var(--orange) !important; }
-  .td-hesap { color: var(--green)  !important; }
-
-  /* BUTTON */
-  .btn-primary {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent2);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: var(--sans);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    letter-spacing: 0.02em;
-    margin-bottom: 20px;
-  }
-  .btn-primary:hover  { background: #388bfd; }
-  .btn-primary:active { transform: scale(0.99); }
-
-  .btn-secondary {
-    padding: 8px 18px;
-    background: var(--bg3);
-    color: var(--text);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    font-family: var(--sans);
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn-secondary:hover { background: var(--border); }
-
-  /* RESULTS */
-  .results-hidden { display: none; }
-
-  .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-  @media (max-width: 600px) { .metric-row { grid-template-columns: 1fr; } }
-
-  .metric-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-  }
-  .metric-card .m-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .metric-card .m-value { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--text); }
-  .metric-card .m-sub   { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
-  .metric-card.ok    { border-color: rgba(63,185,80,0.4); }
-  .metric-card.ok .m-value { color: var(--green); }
-
-  .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .result-table th {
-    background: var(--bg3);
-    color: var(--text2);
-    font-weight: 500;
-    text-align: left;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-  .result-table td {
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-  }
-  .result-table tr:hover td { background: var(--bg3); }
-  .result-table .td-mtbf { font-family: var(--mono); font-weight: 600; color: var(--accent); }
-  .result-table .td-lambda { font-family: var(--mono); font-size: 12px; color: var(--text2); }
-  .result-table .td-pay { font-family: var(--mono); color: var(--text); }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-  .badge-sabit { background: rgba(210,153,34,0.15); color: var(--orange); border: 1px solid rgba(210,153,34,0.3); }
-  .badge-hesap { background: rgba(63,185,80,0.12);  color: var(--green);  border: 1px solid rgba(63,185,80,0.3); }
-
-  /* PARAMS DETAIL */
-  .params-detail {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 16px;
-    font-size: 12px;
-  }
-  .params-detail h4 { color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-  .params-detail .param-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); }
-  .params-detail .param-row:last-child { border-bottom: none; }
-  .params-detail .param-key { color: var(--text2); }
-  .params-detail .param-val { font-family: var(--mono); color: var(--text); }
-
-  /* CSV BUTTON */
-  .csv-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background: var(--bg3);
-    color: var(--green);
-    border: 1px solid rgba(63,185,80,0.3);
-    border-radius: 6px;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    margin-top: 16px;
-    transition: background 0.15s;
-  }
-  .csv-btn:hover { background: var(--border); }
-
-  /* DIVIDER */
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-  /* HIDDEN */
-  .hidden { display: none !important; }
-
-  /* FORMULA BOX */
-  .formula {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text2);
-    margin: 8px 0;
-  }
-  .formula span { color: var(--accent); }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MTBF Tahsis Uygulaması - MIL-HDBK-338B</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #dbe2ea;
+      --primary: #1d4ed8;
+      --primary-dark: #1e40af;
+      --secondary: #eef2ff;
+      --danger: #b91c1c;
+      --success-bg: #ecfdf5;
+      --success-border: #10b981;
+      --warn-bg: #fff7ed;
+      --warn-border: #f59e0b;
+      --error-bg: #fef2f2;
+      --error-border: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .container { max-width: 1380px; margin: 0 auto; }
+    .page-header { margin-bottom: 20px; }
+    .page-header h1 { margin: 0 0 8px 0; font-size: 30px; }
+    .page-header p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+    }
+    .section-head, .actions-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 14px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .step-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    label { font-weight: 600; font-size: 14px; }
+    input, select, button { font: inherit; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    button:hover { background: var(--primary-dark); }
+    button.secondary {
+      background: var(--secondary);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    button.secondary:hover { background: #e5e7eb; }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .note, .method-help {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .formula {
+      background: #f8fafc;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+      font-family: Consolas, monospace;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    td input { min-width: 110px; }
+    .hidden { display: none !important; }
+    #messageBox { margin-top: 14px; }
+    .alert {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid;
+      line-height: 1.45;
+    }
+    .alert.error { background: var(--error-bg); border-color: var(--error-border); }
+    .alert.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+    .alert.success { background: var(--success-bg); border-color: var(--success-border); }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .summary-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fafcff;
+    }
+    .summary-item .k { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .summary-item .v { font-size: 22px; font-weight: 700; }
+    .status-fixed { color: #065f46; font-weight: 700; }
+    .status-allocated { color: #1d4ed8; font-weight: 700; }
+    .small { font-size: 12px; color: var(--muted); }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <header class="page-header">
+      <h1>MTBF Tahsis Uygulaması</h1>
+      <p>
+        MIL-HDBK-338B referanslı tahsis uygulaması. Önce sistem MTBF hedefi ve alt sistem sayısı girilir,
+        sonra satırlar oluşturulur, ardından yöntem seçilip tahsis hesaplanır.
+      </p>
+    </header>
 
-<div class="header">
-  <div class="header-icon">⚙</div>
-  <div>
-    <h1>MTBF Tahsis Uygulaması</h1>
-    <p>MIL-HDBK-338B §5.3.2 — Reliability Allocation Methods</p>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- ADIM 1: SİSTEM BİLGİLERİ -->
-  <div class="step">
-    <div class="step-header">
-      <div class="step-num">1</div>
+    <section class="card">
+      <div class="step-badge">1. Adım</div>
       <h2>Sistem Bilgileri</h2>
-    </div>
-    <div class="step-body">
-      <div class="grid-2">
-        <div class="field-group">
-          <label class="field-label">Sistem MTBF Hedefi (saat)</label>
-          <input type="number" id="sistemMtbf" value="10000" min="1" step="100" oninput="updateSistemInfo()">
+      <div class="grid-3">
+        <div class="field">
+          <label for="systemMtbf">Sistem MTBF hedefi (saat)</label>
+          <input id="systemMtbf" type="number" min="0" step="any" placeholder="Örn. 12000" />
         </div>
-        <div class="field-group">
-          <label class="field-label">Birim Sayısı</label>
-          <input type="number" id="birimSayisi" value="4" min="2" max="20" step="1" oninput="renderBirimler()">
+        <div class="field">
+          <label for="missionTime">Görev süresi T (saat)</label>
+          <input id="missionTime" type="number" min="0" step="any" placeholder="Örn. 10" value="10" />
+        </div>
+        <div class="field">
+          <label for="unitCount">Alt sistem sayısı</label>
+          <input id="unitCount" type="number" min="1" step="1" placeholder="Örn. 4" />
         </div>
       </div>
-      <div class="info-box" id="sistemInfoBox">
-        <span class="icon">ℹ</span>
-        <span id="sistemInfoText"></span>
+      <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+        <button id="createUnitsBtn" type="button">Birimleri Oluştur</button>
+        <button id="sampleBtn" type="button" class="secondary">Örnek Veri Yükle</button>
+        <button id="clearBtn" type="button" class="secondary">Temizle</button>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- ADIM 2: BİRİM İSİMLERİ -->
-  <div class="step">
-    <div class="step-header">
-      <div class="step-num">2</div>
-      <h2>Birim İsimleri</h2>
-    </div>
-    <div class="step-body">
-      <div id="birimIsimlerGrid" class="grid-5"></div>
-    </div>
-  </div>
-
-  <!-- ADIM 3: BİLİNEN MTBF -->
-  <div class="step">
-    <div class="step-header">
-      <div class="step-num">3</div>
-      <h2>MTBF Değeri Bilinen Birimler</h2>
-      <span>Opsiyonel</span>
-    </div>
-    <div class="step-body">
-      <div class="info-box">
-        <span class="icon">ℹ</span>
-        <span>MTBF değeri önceden belirlenmiş birimler için değer girin (COTS ürün, önceki analiz vb.). Bu birimler sabit tutulur. Bilinmiyorsa <strong>0</strong> bırakın.</span>
+    <section class="card" id="unitsCard" hidden>
+      <div class="step-badge">2. Adım</div>
+      <div class="section-head">
+        <h2>Alt Sistem Bilgileri</h2>
+        <div class="small">Sistem bilgilerini girdikten sonra satırlar burada oluşur.</div>
       </div>
-      <div id="bilinenMtbfGrid" class="grid-5"></div>
-      <div id="kalanLambdaBox" class="hidden"></div>
-    </div>
-  </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Alt sistem adı</th>
+              <th class="col-known">Bilinen MTBF (saat)</th>
+              <th class="col-arinc hidden">ARINC baz MTBF (saat)</th>
+              <th class="col-foo hidden">Intricacy</th>
+              <th class="col-foo hidden">State-of-the-Art</th>
+              <th class="col-foo hidden">Performance Time</th>
+              <th class="col-foo hidden">Environment</th>
+            </tr>
+          </thead>
+          <tbody id="unitsBody"></tbody>
+        </table>
+      </div>
+      <div class="note">
+        <strong>Not:</strong> Bilinen MTBF girilen alt sistemler sabit kabul edilir.
+        Equal, ARINC ve FOO yöntemlerinde sistem için kalan arıza oranı yalnızca bilinmeyen alt sistemlere dağıtılır.
+      </div>
+    </section>
 
-  <!-- ADIM 4: YÖNTEM -->
-  <div class="step">
-    <div class="step-header">
-      <div class="step-num">4</div>
+    <section class="card" id="methodCard" hidden>
+      <div class="step-badge">3. Adım</div>
       <h2>Tahsis Yöntemi Seçimi</h2>
-    </div>
-    <div class="step-body">
-      <div class="field-group">
-        <label class="field-label">Yöntem</label>
-        <select id="yontemSelect" onchange="renderYontemParams()">
-          <option value="equal">Equal Allocation — Eşit Dağıtım (§5.3.2.1)</option>
-          <option value="arinc">ARINC Allocation — Mevcut Arıza Oranına Göre (§5.3.2.2)</option>
-          <option value="agree">AGREE Allocation — Karmaşıklık ve Görev Süresi (§5.3.2.3)</option>
-          <option value="fo">Feasibility of Objectives — Gerçekçi Hedef (§5.3.2.4)</option>
-        </select>
+      <div class="grid-2">
+        <div class="field">
+          <label for="method">Tahsis yöntemi</label>
+          <select id="method">
+            <option value="equal">Equal Apportionment</option>
+            <option value="arinc">ARINC</option>
+            <option value="foo">Feasibility of Objectives (FOO)</option>
+          </select>
+        </div>
       </div>
-      <div id="yontemAciklama" class="method-desc"></div>
-    </div>
+      <div class="method-help" id="methodHelp"></div>
+      <div class="formula" id="formulaBox"></div>
+      <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+        <button id="calculateBtn" type="button">Tahsis Hesapla</button>
+        <button id="exportBtn" type="button" class="secondary" disabled>CSV İndir</button>
+      </div>
+      <div id="messageBox"></div>
+    </section>
+
+    <section class="card" id="summaryCard" hidden>
+      <h2>Özet</h2>
+      <div class="summary-grid" id="summaryGrid"></div>
+    </section>
+
+    <section class="card" id="resultsCard" hidden>
+      <h2>Sonuç Tablosu</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Alt sistem</th>
+              <th>Durum</th>
+              <th>Ağırlık / katsayı</th>
+              <th>Tahsis λ (1/saat)</th>
+              <th>Tahsis MTBF (saat)</th>
+              <th>R(T)</th>
+              <th>Not</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- ADIM 5: YÖNTEME ÖZEL PARAMETRELER -->
-  <div class="step" id="adim5" class="hidden">
-    <div class="step-header">
-      <div class="step-num">5</div>
-      <h2 id="adim5Baslik">Yöntem Parametreleri</h2>
-    </div>
-    <div class="step-body" id="yontemParamBody"></div>
-  </div>
+  <script>
+    const unitCountInput = document.getElementById("unitCount");
+    const systemMtbfInput = document.getElementById("systemMtbf");
+    const missionTimeInput = document.getElementById("missionTime");
+    const unitsBody = document.getElementById("unitsBody");
+    const unitsCard = document.getElementById("unitsCard");
+    const methodCard = document.getElementById("methodCard");
+    const methodSelect = document.getElementById("method");
+    const methodHelp = document.getElementById("methodHelp");
+    const formulaBox = document.getElementById("formulaBox");
+    const messageBox = document.getElementById("messageBox");
+    const resultsCard = document.getElementById("resultsCard");
+    const summaryCard = document.getElementById("summaryCard");
+    const summaryGrid = document.getElementById("summaryGrid");
+    const resultsBody = document.getElementById("resultsBody");
+    const exportBtn = document.getElementById("exportBtn");
 
-  <!-- HESAPLA -->
-  <button class="btn-primary" onclick="hesapla()">⟶ Tahsis Hesapla</button>
+    function fmt(v, d = 6) {
+      if (v === null || v === undefined || Number.isNaN(v)) return "-";
+      return Number(v).toLocaleString("tr-TR", { maximumFractionDigits: d });
+    }
 
-  <!-- SONUÇLAR -->
-  <div id="sonuclar" class="results-hidden">
-    <div class="step">
-      <div class="step-header">
-        <div class="step-num" style="background:#3fb950">✓</div>
-        <h2>Tahsis Sonuçları</h2>
-        <span id="sonucYontemLabel"></span>
-      </div>
-      <div class="step-body">
+    function sci(v) {
+      if (v === null || v === undefined || Number.isNaN(v)) return "-";
+      if (v === 0) return "0";
+      if (Math.abs(v) < 0.0001 || Math.abs(v) >= 1000000) return Number(v).toExponential(6);
+      return fmt(v, 6);
+    }
 
-        <div class="metric-row">
-          <div class="metric-card">
-            <div class="m-label">Hedef Sistem MTBF</div>
-            <div class="m-value" id="sonucHedef">—</div>
-            <div class="m-sub">saat</div>
-          </div>
-          <div class="metric-card ok" id="sonucHesaplananCard">
-            <div class="m-label">Hesaplanan Sistem MTBF</div>
-            <div class="m-value" id="sonucHesaplanan">—</div>
-            <div class="m-sub">saat</div>
-          </div>
-          <div class="metric-card" id="sonucSapmaCard">
-            <div class="m-label">Doğrulama</div>
-            <div class="m-value" id="sonucSapma">—</div>
-            <div class="m-sub" id="sonucSapmaLabel">—</div>
-          </div>
+    function escapeHtml(value) {
+      return String(value)
+        .split("&").join("&amp;")
+        .split("<").join("&lt;")
+        .split(">").join("&gt;")
+        .split('"').join("&quot;")
+        .split("'").join("&#39;");
+    }
+
+    function showMessage(type, html) {
+      messageBox.innerHTML = `<div class="alert ${type}">${html}</div>`;
+    }
+
+    function clearMessage() {
+      messageBox.innerHTML = "";
+    }
+
+    function getMethodDescription(method) {
+      if (method === "equal") {
+        return "Equal Apportionment: bilinmeyen alt sistemler arasında kalan sistem arıza oranı eşit bölünür. Elinizde ek teknik veri yoksa hızlı başlangıç için uygundur.";
+      }
+      if (method === "arinc") {
+        return "ARINC: bilinmeyen alt sistemlerin baz MTBF değerlerinden türetilen baz arıza oranları ağırlık olarak kullanılır. Görece daha problemli olması beklenen alt sisteme daha büyük λ payı verilir.";
+      }
+      return "FOO: Intricacy, State-of-the-Art, Performance Time ve Environment puanlarının çarpımı normalize edilerek ağırlık oluşturulur. Mühendislik değerlendirmesini tahsise yansıtır.";
+    }
+
+    function getMethodFormula(method) {
+      if (method === "equal") {
+        return `λ_sys = 1 / MTBF_sys
+λ_remaining = λ_sys - toplam λ_known
+λ_i = λ_remaining / n_unknown
+MTBF_i = 1 / λ_i`;
+      }
+      if (method === "arinc") {
+        return `λ_base,i = 1 / MTBF_base,i
+w_i = λ_base,i / toplam λ_base
+λ_i = w_i × λ_remaining
+MTBF_i = 1 / λ_i`;
+      }
+      return `score_i = Intricacy × State × Performance × Environment
+w_i = score_i / toplam score
+λ_i = w_i × λ_remaining
+MTBF_i = 1 / λ_i`;
+    }
+
+    function updateMethodUI() {
+      const method = methodSelect.value;
+      methodHelp.textContent = getMethodDescription(method);
+      formulaBox.textContent = getMethodFormula(method);
+      document.querySelectorAll(".col-arinc").forEach(el => el.classList.toggle("hidden", method !== "arinc"));
+      document.querySelectorAll(".col-foo").forEach(el => el.classList.toggle("hidden", method !== "foo"));
+    }
+
+    function createInput(type, className, placeholder, min, step) {
+      const input = document.createElement("input");
+      input.type = type;
+      input.className = className;
+      input.placeholder = placeholder;
+      if (min !== null) input.min = min;
+      if (step !== null) input.step = step;
+      return input;
+    }
+
+    function createRows(count) {
+      unitsBody.innerHTML = "";
+      for (let i = 1; i <= count; i += 1) {
+        const tr = document.createElement("tr");
+
+        const tdIdx = document.createElement("td");
+        tdIdx.textContent = i;
+        tr.appendChild(tdIdx);
+
+        const tdName = document.createElement("td");
+        const name = createInput("text", "unit-name", `Alt Sistem ${i}`, null, null);
+        name.value = `Alt Sistem ${i}`;
+        tdName.appendChild(name);
+        tr.appendChild(tdName);
+
+        const tdKnown = document.createElement("td");
+        tdKnown.className = "col-known";
+        const known = createInput("number", "known-mtbf", "Opsiyonel", "0", "any");
+        tdKnown.appendChild(known);
+        tr.appendChild(tdKnown);
+
+        const tdArinc = document.createElement("td");
+        tdArinc.className = "col-arinc hidden";
+        const arinc = createInput("number", "arinc-mtbf", "ARINC için", "0", "any");
+        tdArinc.appendChild(arinc);
+        tr.appendChild(tdArinc);
+
+        const fooFields = ["intricacy", "state", "performance", "environment"];
+        fooFields.forEach(cls => {
+          const td = document.createElement("td");
+          td.className = "col-foo hidden";
+          const inp = createInput("number", `foo-${cls}`, "1-10", "1", "1");
+          inp.max = "10";
+          td.appendChild(inp);
+          tr.appendChild(td);
+        });
+
+        unitsBody.appendChild(tr);
+      }
+      unitsCard.hidden = false;
+      methodCard.hidden = false;
+      updateMethodUI();
+    }
+
+    function positiveOrNull(v) {
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    function int1to10OrNull(v) {
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 1 && n <= 10 ? n : null;
+    }
+
+    function collectUnits() {
+      return Array.from(unitsBody.querySelectorAll("tr")).map((tr, i) => ({
+        index: i + 1,
+        name: tr.querySelector(".unit-name").value.trim(),
+        knownMtbf: positiveOrNull(tr.querySelector(".known-mtbf").value),
+        arincMtbf: positiveOrNull(tr.querySelector(".arinc-mtbf").value),
+        intricacy: int1to10OrNull(tr.querySelector(".foo-intricacy").value),
+        state: int1to10OrNull(tr.querySelector(".foo-state").value),
+        performance: int1to10OrNull(tr.querySelector(".foo-performance").value),
+        environment: int1to10OrNull(tr.querySelector(".foo-environment").value)
+      }));
+    }
+
+    function validateBeforeCreate() {
+      const systemMtbf = Number(systemMtbfInput.value);
+      const missionTime = Number(missionTimeInput.value);
+      const unitCount = Number(unitCountInput.value);
+      if (!Number.isFinite(systemMtbf) || systemMtbf <= 0) return "Sistem MTBF hedefi pozitif olmalıdır.";
+      if (!Number.isFinite(missionTime) || missionTime <= 0) return "Görev süresi T pozitif olmalıdır.";
+      if (!Number.isInteger(unitCount) || unitCount <= 0) return "Alt sistem sayısı pozitif tam sayı olmalıdır.";
+      return null;
+    }
+
+    function validateInputs(systemMtbf, missionTime, units, method) {
+      if (!Number.isFinite(systemMtbf) || systemMtbf <= 0) return "Sistem MTBF hedefi pozitif olmalıdır.";
+      if (!Number.isFinite(missionTime) || missionTime <= 0) return "Görev süresi T pozitif olmalıdır.";
+      if (units.length === 0) return "Önce alt sistem satırlarını oluşturmalısınız.";
+      for (const u of units) {
+        if (!u.name) return `${u.index}. satırda alt sistem adı boş bırakılamaz.`;
+      }
+      if (method === "arinc") {
+        for (const u of units.filter(x => !x.knownMtbf)) {
+          if (!u.arincMtbf) return `ARINC için ${u.name} alt sistemine baz MTBF girmelisiniz.`;
+        }
+      }
+      if (method === "foo") {
+        for (const u of units.filter(x => !x.knownMtbf)) {
+          const vals = [u.intricacy, u.state, u.performance, u.environment];
+          if (vals.some(v => v === null)) return `FOO için ${u.name} alt sistemine 4 puanın tamamını 1-10 arasında girmelisiniz.`;
+        }
+      }
+      return null;
+    }
+
+    function allocateEqual(unknownUnits, lambdaRemaining) {
+      const each = lambdaRemaining / unknownUnits.length;
+      return unknownUnits.map(u => ({
+        ...u,
+        weight: 1 / unknownUnits.length,
+        allocatedLambda: each,
+        note: "Eşit λ payı"
+      }));
+    }
+
+    function allocateArinc(unknownUnits, lambdaRemaining) {
+      const lambdas = unknownUnits.map(u => 1 / u.arincMtbf);
+      const sum = lambdas.reduce((a, b) => a + b, 0);
+      return unknownUnits.map((u, i) => {
+        const w = lambdas[i] / sum;
+        return {
+          ...u,
+          weight: w,
+          allocatedLambda: w * lambdaRemaining,
+          note: "Baz arıza oranına göre"
+        };
+      });
+    }
+
+    function allocateFoo(unknownUnits, lambdaRemaining) {
+      const scores = unknownUnits.map(u => u.intricacy * u.state * u.performance * u.environment);
+      const sum = scores.reduce((a, b) => a + b, 0);
+      return unknownUnits.map((u, i) => {
+        const w = scores[i] / sum;
+        return {
+          ...u,
+          weight: w,
+          allocatedLambda: w * lambdaRemaining,
+          note: `FOO skoru = ${scores[i]}`
+        };
+      });
+    }
+
+    function calculate() {
+      clearMessage();
+      resultsBody.innerHTML = "";
+      summaryGrid.innerHTML = "";
+      resultsCard.hidden = true;
+      summaryCard.hidden = true;
+      exportBtn.disabled = true;
+
+      const systemMtbf = Number(systemMtbfInput.value);
+      const missionTime = Number(missionTimeInput.value);
+      const method = methodSelect.value;
+      const units = collectUnits();
+
+      const err = validateInputs(systemMtbf, missionTime, units, method);
+      if (err) {
+        showMessage("error", err);
+        return;
+      }
+
+      const systemLambda = 1 / systemMtbf;
+      const fixedUnits = units.filter(u => !!u.knownMtbf);
+      const unknownUnits = units.filter(u => !u.knownMtbf);
+      const fixedLambdaSum = fixedUnits.reduce((s, u) => s + 1 / u.knownMtbf, 0);
+      const lambdaRemaining = systemLambda - fixedLambdaSum;
+
+      if (unknownUnits.length === 0 && Math.abs(lambdaRemaining) > 0.000000000001) {
+        showMessage("error", "Tüm alt sistemler sabit girilmiş. Sistem hedefi ile bilinen alt sistem değerleri uyumlu değilse tahsis yapılamaz.");
+        return;
+      }
+
+      if (lambdaRemaining < -0.000000000000001) {
+        showMessage("error", `Bilinen alt sistemlerin λ toplamı ${sci(fixedLambdaSum)} ve sistem hedef λ değeri ${sci(systemLambda)}. Bilinen değerler sistemi aşıyor.`);
+        return;
+      }
+
+      let allocatedUnknown = [];
+      if (unknownUnits.length > 0) {
+        if (method === "equal") allocatedUnknown = allocateEqual(unknownUnits, lambdaRemaining);
+        else if (method === "arinc") allocatedUnknown = allocateArinc(unknownUnits, lambdaRemaining);
+        else allocatedUnknown = allocateFoo(unknownUnits, lambdaRemaining);
+      }
+
+      const finalUnits = units.map(u => {
+        if (u.knownMtbf) {
+          const lambda = 1 / u.knownMtbf;
+          return {
+            ...u,
+            status: "Sabit / bilinen",
+            weight: null,
+            allocatedLambda: lambda,
+            allocatedMtbf: u.knownMtbf,
+            finalR: Math.exp(-lambda * missionTime),
+            note: "Manuel sabit MTBF"
+          };
+        }
+
+        const found = allocatedUnknown.find(x => x.index === u.index);
+        const lambda = found ? found.allocatedLambda : null;
+        return {
+          ...u,
+          status: "Tahsis edildi",
+          weight: found ? found.weight : null,
+          allocatedLambda: lambda,
+          allocatedMtbf: lambda ? 1 / lambda : null,
+          finalR: lambda ? Math.exp(-lambda * missionTime) : null,
+          note: found ? found.note : ""
+        };
+      });
+
+      const totalLambda = finalUnits.reduce((s, u) => s + (u.allocatedLambda || 0), 0);
+      const achievedMtbf = totalLambda > 0 ? 1 / totalLambda : null;
+      const targetR = Math.exp(-systemLambda * missionTime);
+      const achievedR = totalLambda > 0 ? Math.exp(-totalLambda * missionTime) : null;
+
+      const summaryItems = [
+        { k: "Seçilen yöntem", v: method.toUpperCase() },
+        { k: "Hedef sistem MTBF", v: `${fmt(systemMtbf, 4)} saat` },
+        { k: "Alt sistem sayısı", v: String(units.length) },
+        { k: "Hedef sistem λ", v: sci(systemLambda) },
+        { k: "Bilinen alt sistem λ toplamı", v: sci(fixedLambdaSum) },
+        { k: "Dağıtılan kalan λ", v: sci(Math.max(lambdaRemaining, 0)) },
+        { k: "Hedef sistem R(T)", v: fmt(targetR, 8) },
+        { k: "Elde edilen sistem R(T)", v: achievedR !== null ? fmt(achievedR, 8) : "-" },
+        { k: "Elde edilen sistem MTBF", v: achievedMtbf !== null ? `${fmt(achievedMtbf, 4)} saat` : "-" }
+      ];
+
+      summaryGrid.innerHTML = summaryItems.map(item => `
+        <div class="summary-item">
+          <div class="k">${item.k}</div>
+          <div class="v">${item.v}</div>
         </div>
+      `).join("");
 
-        <div style="overflow-x:auto">
-          <table class="result-table" id="sonucTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Birim</th>
-                <th>Tahsis Edilen MTBF (saat)</th>
-                <th>Arıza Oranı λ (arıza/saat)</th>
-                <th>Sistem λ İçindeki Pay</th>
-                <th>Durum</th>
-              </tr>
-            </thead>
-            <tbody id="sonucTableBody"></tbody>
-          </table>
-        </div>
+      resultsBody.innerHTML = finalUnits.map(u => `
+        <tr>
+          <td>${escapeHtml(u.name)}</td>
+          <td class="${u.knownMtbf ? "status-fixed" : "status-allocated"}">${u.status}</td>
+          <td>${u.weight === null ? "-" : fmt(u.weight, 6)}</td>
+          <td>${sci(u.allocatedLambda)}</td>
+          <td>${u.allocatedMtbf ? fmt(u.allocatedMtbf, 4) : "-"}</td>
+          <td>${u.finalR ? fmt(u.finalR, 8) : "-"}</td>
+          <td>${escapeHtml(u.note || "")}</td>
+        </tr>
+      `).join("");
 
-        <div class="params-detail" id="paramsDetail">
-          <h4>Hesaplamada Kullanılan Parametreler</h4>
-          <div id="paramsDetailBody"></div>
-        </div>
+      resultsCard.hidden = false;
+      summaryCard.hidden = false;
+      exportBtn.disabled = false;
+      showMessage("success", "Tahsis hesaplaması tamamlandı. Sonuçlar aşağıda oluşturuldu.");
+    }
 
-        <a class="csv-btn" id="csvBtn" onclick="csvIndir()">↓ CSV İndir</a>
-      </div>
-    </div>
-  </div>
+    function exportCsv() {
+      const rows = [["Alt Sistem", "Durum", "Ağırlık", "Tahsis Lambda", "Tahsis MTBF", "R(T)", "Not"]];
+      Array.from(resultsBody.querySelectorAll("tr")).forEach(tr => {
+        rows.push(Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim()));
+      });
+      const csv = rows.map(row => row.map(cell => `"${String(cell).split('"').join('""')}"`).join(",")).join(`
+`);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mtbf_tahsis_sonuclari.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
 
-</div><!-- /container -->
+    function createUnitsFlow() {
+      clearMessage();
+      const err = validateBeforeCreate();
+      if (err) {
+        showMessage("error", err);
+        return;
+      }
+      const count = Number(unitCountInput.value);
+      createRows(count);
+      resultsCard.hidden = true;
+      summaryCard.hidden = true;
+      exportBtn.disabled = true;
+      showMessage("success", `${count} adet alt sistem satırı oluşturuldu. Şimdi alt sistem bilgilerini doldurup tahsis yöntemini seçebilirsiniz.`);
+    }
 
-<script>
-// ─── STATE ──────────────────────────────────────────────────────────────────
-let birimIsimleri = [];
-let sonucData = [];
+    function loadSample() {
+      systemMtbfInput.value = "12000";
+      missionTimeInput.value = "10";
+      unitCountInput.value = "4";
+      createRows(4);
+      methodSelect.value = "foo";
+      updateMethodUI();
 
-// ─── YARDIMCI ───────────────────────────────────────────────────────────────
-function fmtN(v, d=2) {
-  if (!isFinite(v)) return '∞';
-  return v.toLocaleString('tr-TR', {minimumFractionDigits:d, maximumFractionDigits:d});
-}
-function fmtL(v) {
-  return v.toFixed(8);
-}
-function getSistemMtbf()  { return parseFloat(document.getElementById('sistemMtbf').value) || 10000; }
-function getBirimSayisi() { return Math.max(2, Math.min(20, parseInt(document.getElementById('birimSayisi').value) || 4)); }
-function getYontem()      { return document.getElementById('yontemSelect').value; }
+      const rows = Array.from(unitsBody.querySelectorAll("tr"));
+      rows[0].querySelector(".unit-name").value = "Güç Birimi";
+      rows[0].querySelector(".foo-intricacy").value = "5";
+      rows[0].querySelector(".foo-state").value = "4";
+      rows[0].querySelector(".foo-performance").value = "10";
+      rows[0].querySelector(".foo-environment").value = "6";
 
-function getBirimIsimleri() {
-  const n = getBirimSayisi();
-  const arr = [];
-  for (let i = 0; i < n; i++) {
-    const el = document.getElementById(`isim_${i}`);
-    arr.push(el ? el.value || `Birim ${i+1}` : `Birim ${i+1}`);
-  }
-  return arr;
-}
-function getBilinenMtbf() {
-  const n = getBirimSayisi();
-  const obj = {};
-  for (let i = 0; i < n; i++) {
-    const el = document.getElementById(`bilinen_${i}`);
-    const v = parseFloat(el ? el.value : 0);
-    if (v > 0) obj[i] = v;
-  }
-  return obj;
-}
-function getSerbest(bilinen) {
-  const n = getBirimSayisi();
-  return Array.from({length: n}, (_, i) => i).filter(i => !(i in bilinen));
-}
+      rows[1].querySelector(".unit-name").value = "Kontrol Kartı";
+      rows[1].querySelector(".foo-intricacy").value = "8";
+      rows[1].querySelector(".foo-state").value = "6";
+      rows[1].querySelector(".foo-performance").value = "10";
+      rows[1].querySelector(".foo-environment").value = "5";
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
-window.onload = function() {
-  updateSistemInfo();
-  renderBirimler();
-  renderYontemParams();
-};
+      rows[2].querySelector(".unit-name").value = "RF Modül";
+      rows[2].querySelector(".foo-intricacy").value = "9";
+      rows[2].querySelector(".foo-state").value = "7";
+      rows[2].querySelector(".foo-performance").value = "8";
+      rows[2].querySelector(".foo-environment").value = "6";
 
-// ─── SİSTEM BİLGİSİ ─────────────────────────────────────────────────────────
-function updateSistemInfo() {
-  const m = getSistemMtbf();
-  const l = 1 / m;
-  document.getElementById('sistemInfoText').innerHTML =
-    `λ_sistem = 1 / ${fmtN(m)} = <strong class="mono-val">${fmtL(l)}</strong> arıza/saat`;
-  updateKalanLambda();
-}
+      rows[3].querySelector(".unit-name").value = "Ekran Alt Sistemi";
+      rows[3].querySelector(".known-mtbf").value = "60000";
 
-// ─── BİRİM RENDER ───────────────────────────────────────────────────────────
-function renderBirimler() {
-  const n = getBirimSayisi();
-  const colClass = n <= 4 ? `grid-${n}` : 'grid-5';
+      showMessage("success", "Örnek veri yüklendi. İstersen doğrudan tahsis hesabı yapabilirsin.");
+    }
 
-  // İsimler
-  const isimGrid = document.getElementById('birimIsimlerGrid');
-  isimGrid.className = colClass;
-  isimGrid.innerHTML = '';
-  for (let i = 0; i < n; i++) {
-    const prev = document.getElementById(`isim_${i}`);
-    const val = prev ? prev.value : `Birim ${i+1}`;
-    isimGrid.innerHTML += `
-      <div class="field-group">
-        <label class="field-label">Birim ${i+1}</label>
-        <input type="text" id="isim_${i}" value="${val}" oninput="refreshIsimler()">
-      </div>`;
-  }
+    function clearAll() {
+      systemMtbfInput.value = "";
+      missionTimeInput.value = "10";
+      unitCountInput.value = "";
+      unitsBody.innerHTML = "";
+      methodSelect.value = "equal";
+      unitsCard.hidden = true;
+      methodCard.hidden = true;
+      resultsBody.innerHTML = "";
+      summaryGrid.innerHTML = "";
+      resultsCard.hidden = true;
+      summaryCard.hidden = true;
+      exportBtn.disabled = true;
+      clearMessage();
+      updateMethodUI();
+    }
 
-  // Bilinen MTBF
-  const bilGrid = document.getElementById('bilinenMtbfGrid');
-  bilGrid.className = colClass;
-  bilGrid.innerHTML = '';
-  for (let i = 0; i < n; i++) {
-    const prev = document.getElementById(`bilinen_${i}`);
-    const val = prev ? prev.value : '0';
-    bilGrid.innerHTML += `
-      <div class="field-group">
-        <label class="field-label" id="bilinen_label_${i}">Birim ${i+1}</label>
-        <input type="number" id="bilinen_${i}" value="${val}" min="0" step="100"
-               oninput="updateKalanLambda()">
-      </div>`;
-  }
+    document.getElementById("createUnitsBtn").addEventListener("click", createUnitsFlow);
+    document.getElementById("sampleBtn").addEventListener("click", loadSample);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+    document.getElementById("calculateBtn").addEventListener("click", calculate);
+    document.getElementById("exportBtn").addEventListener("click", exportCsv);
+    methodSelect.addEventListener("change", updateMethodUI);
 
-  refreshIsimler();
-  renderYontemParams();
-  updateSistemInfo();
-}
-
-function refreshIsimler() {
-  const n = getBirimSayisi();
-  for (let i = 0; i < n; i++) {
-    const isimEl = document.getElementById(`isim_${i}`);
-    const lbl = document.getElementById(`bilinen_label_${i}`);
-    if (isimEl && lbl) lbl.textContent = isimEl.value || `Birim ${i+1}`;
-  }
-  updateKalanLambda();
-  renderYontemParams();
-}
-
-// ─── KALAN LAMBDA ────────────────────────────────────────────────────────────
-function updateKalanLambda() {
-  const sistemMtbf = getSistemMtbf();
-  const sistemL = 1 / sistemMtbf;
-  const bilinen = getBilinenMtbf();
-  const box = document.getElementById('kalanLambdaBox');
-
-  if (Object.keys(bilinen).length === 0) {
-    box.className = 'hidden';
-    return;
-  }
-
-  const bilinenL = Object.values(bilinen).reduce((s, v) => s + 1/v, 0);
-  const kalanL = sistemL - bilinenL;
-  const serbest = getSerbest(bilinen);
-
-  if (kalanL <= 0) {
-    box.className = 'warn-box';
-    box.innerHTML = `<span class="icon">⚠</span><span>Sabit birim arıza oranları toplamı sistem hedefini aşıyor! Değerleri kontrol edin.</span>`;
-  } else {
-    box.className = 'info-box';
-    box.innerHTML = `<span class="icon">ℹ</span><span>
-      Sabit birimler sonrası <strong>${serbest.length} serbest birime</strong> dağıtılacak
-      kalan λ = <span class="mono-val">${fmtL(kalanL)}</span>
-      &nbsp;(eşdeğer MTBF: <span class="mono-val">${fmtN(1/kalanL)} saat</span>)
-    </span>`;
-  }
-}
-
-// ─── YÖNTEM AÇIKLAMA + PARAMETRELER ─────────────────────────────────────────
-const YONTEM_ACIK = {
-  equal: {
-    baslik: 'Equal Allocation — Parametreler',
-    acik: '<strong>Tüm serbest birimlere eşit arıza oranı tahsis edilir.</strong><br>Ek parametre gerekmez. Doğrudan hesaplayabilirsiniz.<br><em>Ne zaman kullanılır: Tasarımın çok erken aşamasında, birimler hakkında hiçbir bilgi yokken.</em>',
-    formul: 'λ_birim = λ_kalan / N_serbest &nbsp;→&nbsp; MTBF_birim = 1 / λ_birim'
-  },
-  arinc: {
-    baslik: 'ARINC Allocation — Mevcut Arıza Oranları',
-    acik: '<strong>Birimlerin mevcut/tahmini arıza oranlarına göre ağırlıklandırılır.</strong><br>Her serbest birim için mevcut MTBF değerini girin. Arıza yükü fazla olan birime tahsisten daha fazla pay düşer.<br><em>Kaynak: saha verisi, 217F Parts Count tahmini veya NPRD/EPRD veri tabanı.</em>',
-    formul: 'w_i = λ_mevcut_i / Σλ_mevcut &nbsp;→&nbsp; λ_tahsis_i = w_i × λ_kalan'
-  },
-  agree: {
-    baslik: 'AGREE Allocation — Karmaşıklık ve Görev Süresi',
-    acik: '<strong>Birimin karmaşıklığı (modül sayısı), görev süresi ve kritikliği dikkate alınır.</strong><br>Her birim için modül sayısı (n), görev süresi (t) ve kritiklik (w) girin.<br><em>Ne zaman kullanılır: Tasarım detayları belli olduğunda, karmaşıklık farkı büyük birimlerde.</em>',
-    formul: 'MTBF_i = (Σn_j × t_i) / (n_i × w_i × λ_kalan × T)'
-  },
-  fo: {
-    baslik: 'Feasibility of Objectives — Mevcut Performans ve Güçlük',
-    acik: '<strong>Hem mevcut performans hem iyileştirme güçlüğü dikkate alınır.</strong><br>Her birim için mevcut MTBF ve güçlük faktörü (1–10) girin. Pratikte en çok tercih edilen yöntemdir.<br><em>Ne zaman kullanılır: Karma sistemlerde — bazı birimler olgunlaşmış, bazıları yeni geliştirme.</em>',
-    formul: 'Ağırlık_i = (1/MTBF_mevcut_i) × güçlük_i &nbsp;→&nbsp; w_i = Ağırlık_i / ΣAğırlık'
-  }
-};
-
-function renderYontemParams() {
-  const yontem = getYontem();
-  const info = YONTEM_ACIK[yontem];
-  const bilinen = getBilinenMtbf();
-  const serbest = getSerbest(bilinen);
-  const isimler = getBirimIsimleri();
-
-  // Açıklama
-  document.getElementById('yontemAciklama').innerHTML =
-    `${info.acik}<div class="formula"><span>${info.formul}</span></div>`;
-
-  // Adım 5 başlık
-  document.getElementById('adim5Baslik').textContent = info.baslik;
-
-  const body = document.getElementById('yontemParamBody');
-  const adim5 = document.getElementById('adim5');
-
-  if (yontem === 'equal') {
-    adim5.style.display = 'none';
-    return;
-  }
-  adim5.style.display = '';
-
-  if (yontem === 'arinc') {
-    body.innerHTML = `
-      <div class="info-box" style="margin-bottom:16px">
-        <span class="icon">ℹ</span>
-        <span>Her serbest birim için mevcut/tahmini MTBF değerini girin. Tahsis ağırlıkları otomatik hesaplanır.</span>
-      </div>
-      <div id="arincGrid"></div>
-      <div id="arincOnizleme"></div>`;
-
-    const grid = document.getElementById('arincGrid');
-    grid.className = serbest.length <= 5 ? `grid-${Math.min(serbest.length,5)}` : 'grid-5';
-    serbest.forEach(i => {
-      const prev = document.getElementById(`arinc_${i}`);
-      const val = prev ? prev.value : '5000';
-      grid.innerHTML += `
-        <div class="field-group">
-          <label class="field-label">${isimler[i]}<br>Mevcut MTBF (saat)</label>
-          <input type="number" id="arinc_${i}" value="${val}" min="1" step="100" oninput="updateArincOnizleme()">
-        </div>`;
-    });
-    updateArincOnizleme();
-  }
-
-  else if (yontem === 'agree') {
-    body.innerHTML = `
-      <div class="info-box" style="margin-bottom:16px">
-        <span class="icon">ℹ</span>
-        <span>
-          <strong>nᵢ:</strong> Alt modül/kart sayısı (karmaşıklık) &nbsp;|&nbsp;
-          <strong>tᵢ:</strong> Birimin görev boyunca aktif olduğu süre (saat) &nbsp;|&nbsp;
-          <strong>wᵢ:</strong> Kritiklik — 1.0: arıza tam görev başarısızlığına yol açar; 0.5: görevin yarısını etkiler
-        </span>
-      </div>
-      <div class="field-group" style="max-width:280px; margin-bottom:20px">
-        <label class="field-label">Sistem Görev Süresi T (saat)</label>
-        <input type="number" id="agreeT" value="10" min="0.1" step="0.5">
-      </div>
-      <div id="agreeCards"></div>`;
-
-    const cards = document.getElementById('agreeCards');
-    serbest.forEach(i => {
-      const pn = document.getElementById(`agree_n_${i}`);
-      const pt = document.getElementById(`agree_t_${i}`);
-      const pw = document.getElementById(`agree_w_${i}`);
-      const vn = pn ? pn.value : '10';
-      const vt = pt ? pt.value : '10';
-      const vw = pw ? pw.value : '1.0';
-      cards.innerHTML += `
-        <div class="birim-card">
-          <div class="birim-card-header">▸ ${isimler[i]}</div>
-          <div class="grid-3">
-            <div class="field-group">
-              <label class="field-label">Modül sayısı nᵢ</label>
-              <input type="number" id="agree_n_${i}" value="${vn}" min="1" step="1">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Görev süresi tᵢ (saat)</label>
-              <input type="number" id="agree_t_${i}" value="${vt}" min="0.01" step="0.5">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Kritiklik wᵢ &nbsp;<span id="agree_w_val_${i}" style="color:var(--accent);font-family:var(--mono)">${vw}</span></label>
-              <div class="slider-row">
-                <input type="range" id="agree_w_${i}" min="0" max="1" step="0.05" value="${vw}"
-                  oninput="document.getElementById('agree_w_val_${i}').textContent=parseFloat(this.value).toFixed(2)">
-              </div>
-            </div>
-          </div>
-        </div>`;
-    });
-  }
-
-  else if (yontem === 'fo') {
-    body.innerHTML = `
-      <div class="info-box" style="margin-bottom:16px">
-        <span class="icon">ℹ</span>
-        <span>
-          <strong>Güçlük Rehberi:</strong>
-          1–2: COTS / kolay değişim &nbsp;|&nbsp;
-          3–4: Küçük revizyon &nbsp;|&nbsp;
-          5–6: Orta düzey tasarım değişikliği &nbsp;|&nbsp;
-          7–8: Kapsamlı yeniden tasarım &nbsp;|&nbsp;
-          9–10: Teknoloji sınırı
-        </span>
-      </div>
-      <div id="foCards"></div>
-      <div id="foOnizleme"></div>`;
-
-    const cards = document.getElementById('foCards');
-    serbest.forEach(i => {
-      const pm = document.getElementById(`fo_mev_${i}`);
-      const pg = document.getElementById(`fo_guc_${i}`);
-      const vm = pm ? pm.value : '5000';
-      const vg = pg ? pg.value : '5';
-      cards.innerHTML += `
-        <div class="birim-card">
-          <div class="birim-card-header">▸ ${isimler[i]}</div>
-          <div class="grid-2">
-            <div class="field-group">
-              <label class="field-label">Mevcut MTBF (saat)</label>
-              <input type="number" id="fo_mev_${i}" value="${vm}" min="1" step="100" oninput="updateFoOnizleme()">
-            </div>
-            <div class="field-group">
-              <label class="field-label">
-                Güçlük faktörü &nbsp;
-                <span id="fo_guc_val_${i}" style="color:var(--accent);font-family:var(--mono)">${vg}</span>/10
-              </label>
-              <div class="slider-row">
-                <input type="range" id="fo_guc_${i}" min="1" max="10" step="1" value="${vg}"
-                  oninput="document.getElementById('fo_guc_val_${i}').textContent=this.value; updateFoOnizleme()">
-                <span class="slider-val" id="fo_guc_disp_${i}">${vg}</span>
-              </div>
-            </div>
-          </div>
-        </div>`;
-    });
-    updateFoOnizleme();
-  }
-}
-
-// ─── ARINC ÖNİZLEME ─────────────────────────────────────────────────────────
-function updateArincOnizleme() {
-  const bilinen = getBilinenMtbf();
-  const serbest = getSerbest(bilinen);
-  const isimler = getBirimIsimleri();
-  const box = document.getElementById('arincOnizleme');
-  if (!box) return;
-
-  const vals = {};
-  let toplam = 0;
-  serbest.forEach(i => {
-    const el = document.getElementById(`arinc_${i}`);
-    const v = parseFloat(el ? el.value : 5000) || 5000;
-    vals[i] = 1/v;
-    toplam += 1/v;
-  });
-
-  let rows = serbest.map(i => {
-    const pay = (vals[i]/toplam*100).toFixed(1);
-    return `<tr>
-      <td class="td-name">${isimler[i]}</td>
-      <td>${fmtN(1/vals[i])} saat</td>
-      <td>${fmtL(vals[i])}</td>
-      <td>${pay}%</td>
-    </tr>`;
-  }).join('');
-
-  box.innerHTML = `
-    <table class="preview-table" style="margin-top:16px">
-      <thead><tr><th>Birim</th><th>Mevcut MTBF</th><th>λ_mevcut</th><th>Tahsis Ağırlığı</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-// ─── FO ÖNİZLEME ────────────────────────────────────────────────────────────
-function updateFoOnizleme() {
-  const bilinen = getBilinenMtbf();
-  const serbest = getSerbest(bilinen);
-  const isimler = getBirimIsimleri();
-  const box = document.getElementById('foOnizleme');
-  if (!box) return;
-
-  const agirlik = {};
-  let toplam = 0;
-  serbest.forEach(i => {
-    const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
-    const guc = parseFloat((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
-    agirlik[i] = (1/mev) * guc;
-    toplam += agirlik[i];
-  });
-
-  const rows = serbest.map(i => {
-    const pay = (agirlik[i]/toplam*100).toFixed(1);
-    const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
-    const guc = parseInt((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
-    return `<tr>
-      <td class="td-name">${isimler[i]}</td>
-      <td>${fmtN(mev)} saat</td>
-      <td>${guc}/10</td>
-      <td>${pay}%</td>
-    </tr>`;
-  }).join('');
-
-  box.innerHTML = `
-    <table class="preview-table" style="margin-top:16px">
-      <thead><tr><th>Birim</th><th>Mevcut MTBF</th><th>Güçlük</th><th>Tahsis Ağırlığı</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-// ─── HESAPLAMA ───────────────────────────────────────────────────────────────
-function hesapla() {
-  const sistemMtbf = getSistemMtbf();
-  const sistemL = 1/sistemMtbf;
-  const yontem = getYontem();
-  const n = getBirimSayisi();
-  const isimler = getBirimIsimleri();
-  const bilinen = getBilinenMtbf();
-  const serbest = getSerbest(bilinen);
-
-  const bilinenL = Object.values(bilinen).reduce((s,v) => s+1/v, 0);
-  const kalanL = sistemL - bilinenL;
-
-  if (kalanL <= 0) {
-    alert('Sabit birim arıza oranları toplamı sistem hedefini aşıyor. Lütfen değerleri kontrol edin.');
-    return;
-  }
-  if (serbest.length === 0) {
-    alert('Tüm birimler sabit — tahsis edilecek serbest birim yok.');
-    return;
-  }
-
-  const sonucMtbf = {...bilinen};
-
-  if (yontem === 'equal') {
-    const lam = kalanL / serbest.length;
-    serbest.forEach(i => sonucMtbf[i] = 1/lam);
-  }
-
-  else if (yontem === 'arinc') {
-    const mevL = {};
-    let topL = 0;
-    serbest.forEach(i => {
-      const v = parseFloat((document.getElementById(`arinc_${i}`) || {}).value) || 5000;
-      mevL[i] = 1/v;
-      topL += 1/v;
-    });
-    serbest.forEach(i => {
-      const pay = mevL[i]/topL;
-      sonucMtbf[i] = 1/(pay*kalanL);
-    });
-  }
-
-  else if (yontem === 'agree') {
-    const T = parseFloat((document.getElementById('agreeT') || {}).value) || 10;
-    const apArr = {};
-    let topN = 0;
-    serbest.forEach(i => {
-      const ni = parseInt((document.getElementById(`agree_n_${i}`) || {}).value) || 10;
-      const ti = parseFloat((document.getElementById(`agree_t_${i}`) || {}).value) || T;
-      const wi = parseFloat((document.getElementById(`agree_w_${i}`) || {}).value) || 1;
-      apArr[i] = {ni, ti, wi};
-      topN += ni;
-    });
-    serbest.forEach(i => {
-      const {ni, ti, wi} = apArr[i];
-      if (wi === 0 || ti === 0) { sonucMtbf[i] = Infinity; return; }
-      sonucMtbf[i] = (topN * ti) / (ni * wi * kalanL * T);
-    });
-    window._agreeParams = {T, apArr};
-  }
-
-  else if (yontem === 'fo') {
-    const fp = {};
-    let topAg = 0;
-    serbest.forEach(i => {
-      const mev = parseFloat((document.getElementById(`fo_mev_${i}`) || {}).value) || 5000;
-      const guc = parseInt((document.getElementById(`fo_guc_${i}`) || {}).value) || 5;
-      fp[i] = {mev, guc, ag: (1/mev)*guc};
-      topAg += fp[i].ag;
-    });
-    serbest.forEach(i => {
-      sonucMtbf[i] = 1/(fp[i].ag/topAg*kalanL);
-    });
-    window._foParams = fp;
-  }
-
-  // Doğrulama
-  const finiteVals = Object.values(sonucMtbf).filter(v => isFinite(v));
-  const topLSonuc = finiteVals.reduce((s,v) => s+1/v, 0);
-  const hesSistemMtbf = 1/topLSonuc;
-  const fark = ((hesSistemMtbf - sistemMtbf)/sistemMtbf)*100;
-
-  // Metrikler
-  document.getElementById('sonucHedef').textContent = fmtN(sistemMtbf);
-  document.getElementById('sonucHesaplanan').textContent = fmtN(hesSistemMtbf);
-  document.getElementById('sonucSapma').textContent = `%${Math.abs(fark).toFixed(4)}`;
-  document.getElementById('sonucSapmaLabel').textContent = Math.abs(fark) < 0.1 ? '✓ Hedef karşılandı' : '⚠ Kontrol edin';
-  document.getElementById('sonucSapmaCard').className = 'metric-card ' + (Math.abs(fark) < 0.1 ? 'ok' : '');
-  document.getElementById('sonucYontemLabel').textContent = document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text;
-
-  // Tablo
-  const tbody = document.getElementById('sonucTableBody');
-  tbody.innerHTML = '';
-  sonucData = [];
-  for (let i = 0; i < n; i++) {
-    const mv = sonucMtbf[i];
-    const sabit = i in bilinen;
-    const lv = isFinite(mv) ? 1/mv : 0;
-    const pay = isFinite(mv) ? lv/topLSonuc*100 : 0;
-    const row = {
-      no: i+1, birim: isimler[i],
-      mtbf: isFinite(mv) ? fmtN(mv) : '∞',
-      lambda: fmtL(lv), pay: pay.toFixed(2)+'%',
-      durum: sabit ? 'Sabit' : 'Hesaplanan'
-    };
-    sonucData.push(row);
-    tbody.innerHTML += `
-      <tr>
-        <td style="color:var(--text3);font-family:var(--mono)">${i+1}</td>
-        <td class="td-name">${isimler[i]}</td>
-        <td class="td-mtbf">${row.mtbf}</td>
-        <td class="td-lambda">${row.lambda}</td>
-        <td class="td-pay">${row.pay}</td>
-        <td><span class="badge ${sabit ? 'badge-sabit' : 'badge-hesap'}">${sabit ? '🔒 Sabit' : '📐 Hesaplanan'}</span></td>
-      </tr>`;
-  }
-
-  // Parametreler detayı
-  const pBody = document.getElementById('paramsDetailBody');
-  pBody.innerHTML = '';
-  const addParam = (k, v) => {
-    pBody.innerHTML += `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`;
-  };
-  addParam('Yöntem', document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text);
-  addParam('Sistem MTBF Hedefi', `${fmtN(sistemMtbf)} saat`);
-  addParam('λ_sistem', `${fmtL(sistemL)} arıza/saat`);
-  if (Object.keys(bilinen).length > 0) {
-    addParam('Sabit birimler toplam λ', `${fmtL(bilinenL)}`);
-    addParam('Serbest birimlere kalan λ', `${fmtL(kalanL)}`);
-    Object.entries(bilinen).forEach(([i,v]) => {
-      addParam(`  Sabit: ${isimler[i]}`, `${fmtN(v)} saat`);
-    });
-  }
-  if (yontem === 'agree' && window._agreeParams) {
-    addParam('AGREE — Sistem Görev Süresi T', `${window._agreeParams.T} saat`);
-    serbest.forEach(i => {
-      const p = window._agreeParams.apArr[i];
-      addParam(`  ${isimler[i]}`, `nᵢ=${p.ni}, tᵢ=${p.ti} saat, wᵢ=${p.wi}`);
-    });
-  }
-  if (yontem === 'fo' && window._foParams) {
-    serbest.forEach(i => {
-      const p = window._foParams[i];
-      addParam(`  ${isimler[i]}`, `Mevcut=${fmtN(p.mev)} saat, Güçlük=${p.guc}/10`);
-    });
-  }
-  if (yontem === 'arinc') {
-    serbest.forEach(i => {
-      const v = parseFloat((document.getElementById(`arinc_${i}`) || {}).value) || 5000;
-      addParam(`  ${isimler[i]} (mevcut MTBF)`, `${fmtN(v)} saat`);
-    });
-  }
-
-  // Göster
-  document.getElementById('sonuclar').style.display = '';
-  document.getElementById('sonuclar').scrollIntoView({behavior: 'smooth'});
-}
-
-// ─── CSV ─────────────────────────────────────────────────────────────────────
-function csvIndir() {
-  if (!sonucData.length) return;
-  const yontem = document.getElementById('yontemSelect').options[document.getElementById('yontemSelect').selectedIndex].text;
-  let csv = '\uFEFF'; // BOM for Turkish chars in Excel
-  csv += `MTBF Tahsis Sonuçlari\n`;
-  csv += `Yontem: ${yontem}\n`;
-  csv += `Sistem MTBF Hedefi: ${getSistemMtbf()} saat\n\n`;
-  csv += 'No,Birim,Tahsis Edilen MTBF (saat),Ariza Orani Lambda (ariza/saat),Sistem Lambda Icindeki Pay,Durum\n';
-  sonucData.forEach(r => {
-    csv += `${r.no},"${r.birim}","${r.mtbf}","${r.lambda}","${r.pay}","${r.durum}"\n`;
-  });
-  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `mtbf_tahsis_${getYontem()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-</script>
+    updateMethodUI();
+  </script>
 </body>
 </html>
