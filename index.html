@@ -452,7 +452,7 @@
 
     let lastSummarySections = [];
 
-    function fmt(v, d = 6) {
+    function fmt(v, d = 4) {
       if (v === null || v === undefined || Number.isNaN(v)) return "-";
       return Number(v).toLocaleString("tr-TR", { maximumFractionDigits: d });
     }
@@ -460,8 +460,8 @@
     function sci(v) {
       if (v === null || v === undefined || Number.isNaN(v)) return "-";
       if (v === 0) return "0";
-      if (Math.abs(v) < 0.0001 || Math.abs(v) >= 1000000) return Number(v).toExponential(6);
-      return fmt(v, 6);
+      if (Math.abs(v) < 0.0001 || Math.abs(v) >= 1000000) return Number(v).toExponential(4);
+      return fmt(v, 4);
     }
 
     function escapeHtml(value) {
@@ -760,7 +760,7 @@ MTBF_i,target = 1 / λ_i`;
           allocatedLambda: lambda,
           allocatedMtbf: 1 / lambda,
           finalR: targetR,
-          note: targetR > baseR + 0.000000000001 ? `R(T) ${fmt(baseR, 8)} -> ${fmt(targetR, 8)}` : "İyileştirme gerekmedi"
+          note: targetR > baseR + 0.000000000001 ? `R(T) ${fmt(baseR, 8)} -> ${fmt(targetR, 4)}` : "İyileştirme gerekmedi"
         };
       });
     }
@@ -781,7 +781,7 @@ MTBF_i,target = 1 / λ_i`;
             { k: "Sistem MTBF hedefi", v: `${fmt(systemMtbf, 4)} saat` },
             { k: "Görev süresi", v: `${fmt(missionTime, 4)} saat` },
             { k: "Hedef sistem λ", v: sci(targetLambda) },
-            { k: "Hedef sistem R(T)", v: fmt(targetR, 8) }
+            { k: "Hedef sistem R(T)", v: fmt(targetR, 4) }
           ]
         },
         {
@@ -831,10 +831,10 @@ MTBF_i,target = 1 / λ_i`;
         <tr>
           <td>${escapeHtml(u.name)}</td>
           <td class="${u.status === "İyileştirildi" ? "status-improved" : (u.status === "Sabit kaldı" ? "status-fixed" : "status-allocated")}">${escapeHtml(u.status)}</td>
-          <td>${u.weight === null ? "-" : fmt(u.weight, 6)}</td>
+          <td>${u.weight === null ? "-" : fmt(u.weight, 4)}</td>
           <td>${sci(u.allocatedLambda)}</td>
           <td>${u.allocatedMtbf ? fmt(u.allocatedMtbf, 4) : "-"}</td>
-          <td>${u.finalR ? fmt(u.finalR, 8) : "-"}</td>
+          <td>${u.finalR ? fmt(u.finalR, 4) : "-"}</td>
           <td>${escapeHtml(u.note || "")}</td>
         </tr>
       `).join("");
@@ -878,36 +878,84 @@ MTBF_i,target = 1 / λ_i`;
       showMessage("success", "Tahsis hesaplaması tamamlandı. Sonuçlar aşağıda oluşturuldu.");
     }
 
-    function createExcelHtml() {
-      const summaryHtml = lastSummarySections.map(section => `
-        <table border="1" style="border-collapse:collapse; margin-bottom:14px;">
-          <tr><th colspan="2">${escapeHtml(section.title)}</th></tr>
-          ${section.items.map(item => `<tr><td>${escapeHtml(item.k)}</td><td>${escapeHtml(item.v)}</td></tr>`).join("")}
-        </table>
-      `).join("");
 
-      const rowsHtml = Array.from(resultsBody.querySelectorAll("tr")).map(tr => {
-        const cells = Array.from(tr.querySelectorAll("td")).map(td => `<td>${escapeHtml(td.textContent.trim())}</td>`).join("");
-        return `<tr>${cells}</tr>`;
-      }).join("");
+function xmlEscape(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
 
-      const headerCells = Array.from(resultsTable.querySelectorAll("thead th")).map(th => `<th>${escapeHtml(th.textContent.trim())}</th>`).join("");
+function createExcelXml() {
+  const summaryRows = lastSummarySections.flatMap(section => {
+    const rows = [];
+    rows.push(`
+      <Row>
+        <Cell ss:MergeAcross="1"><Data ss:Type="String">${xmlEscape(section.title)}</Data></Cell>
+      </Row>
+    `);
 
-      return `
-        <html>
-        <head><meta charset="UTF-8"></head>
-        <body>
-          <h2>MTBF Tahsis Özeti</h2>
-          ${summaryHtml}
-          <h2>Sonuç Tablosu</h2>
-          <table border="1" style="border-collapse:collapse;">
-            <thead><tr>${headerCells}</tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        </body>
-        </html>
-      `;
-    }
+    section.items.forEach(item => {
+      rows.push(`
+        <Row>
+          <Cell><Data ss:Type="String">${xmlEscape(item.k)}</Data></Cell>
+          <Cell><Data ss:Type="String">${xmlEscape(item.v)}</Data></Cell>
+        </Row>
+      `);
+    });
+
+    rows.push(`<Row></Row>`);
+    return rows;
+  }).join("");
+
+  const headerCells = Array.from(resultsTable.querySelectorAll("thead th"))
+    .map(th => `<Cell><Data ss:Type="String">${xmlEscape(th.textContent.trim())}</Data></Cell>`)
+    .join("");
+
+  const bodyRows = Array.from(resultsBody.querySelectorAll("tr"))
+    .map(tr => {
+      const cells = Array.from(tr.querySelectorAll("td"))
+        .map(td => `<Cell><Data ss:Type="String">${xmlEscape(td.textContent.trim())}</Data></Cell>`)
+        .join("");
+      return `<Row>${cells}</Row>`;
+    })
+    .join("");
+
+  return `<?xml version="1.0"?>
+  <?mso-application progid="Excel.Sheet"?>
+  <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:html="http://www.w3.org/TR/REC-html40">
+    <Worksheet ss:Name="Ozet">
+      <Table>
+        ${summaryRows}
+      </Table>
+    </Worksheet>
+    <Worksheet ss:Name="Sonuclar">
+      <Table>
+        <Row>${headerCells}</Row>
+        ${bodyRows}
+      </Table>
+    </Worksheet>
+  </Workbook>`;
+}
+
+function downloadExcel() {
+  const xml = createExcelXml();
+  const blob = new Blob([xml], { type: "application/xml;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mtbf_tahsis_sonuclari.xml";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
     function downloadExcel() {
       const excelHtml = createExcelHtml();
