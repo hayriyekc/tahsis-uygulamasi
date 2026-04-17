@@ -313,6 +313,33 @@
       font-size: 12px;
       color: var(--muted);
     }
+
+    .tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.tab-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.tab-panel.hidden {
+  display: none;
+}
   </style>
 </head>
 <body>
@@ -323,8 +350,13 @@
         MIL-HDBK-338B referanslı tahsis yöntemleri için hazırlanmış istemci tarafı web uygulaması.
         Akış: sistem hedefi ve alt sistem sayısı girilir, yöntem seçilir, sonra seçilen yönteme göre ilgili alanlar açılır ve sonuçlar tablo halinde üretilir.
       </p>
+      <div class="tabs">
+  <button class="tab-btn active" data-tab="mtbf">MTBF Tahsis</button>
+  <button class="tab-btn" data-tab="mttr">MTTR Tahsis</button>
+  </div>
     </header>
 
+    <section class="tab-panel" id="tab-mtbf"></section>
     <section class="card">
       <div class="step-badge">1. Adım</div>
       <h2>Sistem Bilgileri</h2>
@@ -430,7 +462,186 @@
     </section>
   </div>
 
+  <section class="tab-panel hidden" id="tab-mttr">
+  <section class="card">
+    <div class="step-badge">1. Adım</div>
+    <h2>MTTR Sistem Bilgileri</h2>
+    <div class="grid-4">
+      <div class="field">
+        <label for="mttrSystemTarget">Sistem MTTR hedefi (saat)</label>
+        <input id="mttrSystemTarget" type="number" min="0" step="any" placeholder="Örn. 1.50" />
+      </div>
+
+      <div class="field">
+        <label for="mttrUnitCount">Alt sistem sayısı</label>
+        <input id="mttrUnitCount" type="number" min="1" step="1" placeholder="Örn. 4" />
+      </div>
+
+      <div class="field">
+        <label for="mttrMtbfMode">MTBF kaynağı</label>
+        <select id="mttrMtbfMode">
+          <option value="auto">MTBF sekmesinden çek</option>
+          <option value="manual">Manuel gir</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mttrMaintenanceLevel">Bakım seviyesi</label>
+        <select id="mttrMaintenanceLevel">
+          <option value="organizational">Organizational</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="depot">Depot</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="method-help">
+      Bu sekme, MIL-HDBK-472 tarzı maintainability prediction mantığıyla çalışır:
+      her birim için aktif bakım süresi elemanları toplanır, ilk MTTR tahmini elde edilir,
+      sonra failure-rate ağırlıkları ile sistem MTTR hedefine ölçeklenir.
+    </div>
+
+    <div class="formula">
+t_est,i = CIT_i + Verify_i + Nconnector·tconnector + Nscrew·tscrew + Nlatch·tlatch + Ncable·tcable
+λ_i = 1 / MTBF_i
+p_i = λ_i / toplam λ_i
+MTTR_sys,est = toplam (p_i · t_est,i)
+k = MTTR_sys,target / MTTR_sys,est
+MTTR_i,target = k · t_est,i
+A_i = MTBF_i / (MTBF_i + MTTR_i,target)
+    </div>
+
+    <div class="info-box">
+      Not: Buradaki hedefe ölçekleme adımı, MIL-HDBK-472 prediction çıktılarının üstüne eklenen
+      pratik bir allocation yaklaşımıdır.
+    </div>
+
+    <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+      <button id="mttrCreateUnitsBtn" type="button">2. Adımı Oluştur</button>
+    </div>
+
+    <div id="mttrMessageBox"></div>
+  </section>
+
+  <section class="card hidden" id="mttrUnitsCard">
+    <div class="step-badge">2. Adım</div>
+    <div class="section-head">
+      <h2>MTTR Birim Girdileri</h2>
+      <div class="small">Connector / vida süreleri aşağıdaki veritabanından çekilir.</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Birim adı</th>
+            <th>MTBF (saat)</th>
+            <th>CIT / temel süre</th>
+            <th>Doğrulama süresi</th>
+            <th>Konnektör</th>
+            <th>Vida</th>
+            <th>Latch</th>
+            <th>Kablo</th>
+          </tr>
+        </thead>
+        <tbody id="mttrUnitsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+      <button id="mttrCalculateBtn" type="button">MTTR Tahsisini Hesapla</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Connector / Vida Süre Veritabanı</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Öğe</th>
+            <th>Anahtar</th>
+            <th>Süre (saat/adet)</th>
+            <th>Açıklama</th>
+          </tr>
+        </thead>
+        <tbody id="mttrDbBody"></tbody>
+      </table>
+    </div>
+
+    <div class="actions-inline" style="margin-top:14px; justify-content:flex-start;">
+      <button id="mttrDbAddBtn" type="button">Satır Ekle</button>
+      <button id="mttrDbResetBtn" type="button" class="secondary">Varsayılanlara Dön</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="mttrInputsCard">
+    <h2>MTTR Hesabında Kullanılan Bilgiler</h2>
+    <div id="mttrInputsContent"></div>
+  </section>
+
+  <section class="card hidden" id="mttrSummaryCard">
+    <h2>MTTR Özet</h2>
+    <div id="mttrSummaryContent"></div>
+  </section>
+
+  <section class="card hidden" id="mttrResultsCard">
+    <h2>MTTR Sonuç Tablosu</h2>
+    <div class="table-wrap">
+      <table id="mttrResultsTable">
+        <thead>
+          <tr>
+            <th>Birim</th>
+            <th>MTBF</th>
+            <th>İlk MTTR tahmini</th>
+            <th>Tahsis MTTR</th>
+            <th>λ ağırlığı</th>
+            <th>Inherent Availability</th>
+            <th>Not</th>
+          </tr>
+        </thead>
+        <tbody id="mttrResultsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card hidden" id="mttrAvailabilityCard">
+    <h2>Availability Sıralaması</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Sıra</th>
+            <th>Birim</th>
+            <th>MTBF</th>
+            <th>MTTR</th>
+            <th>Availability</th>
+          </tr>
+        </thead>
+        <tbody id="mttrAvailabilityBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card hidden" id="mttrFinalActionsCard">
+    <div class="actions-inline" style="justify-content:flex-start;">
+      <button id="mttrExcelBtn" type="button">Excel İndir</button>
+      <button id="mttrClearBtn" type="button" class="secondary">Temizle</button>
+    </div>
+  </section>
+</section>
+
+  </section>
+
   <script>
+    window.mtbfData = {
+  results: [],
+  systemMtbf: null,
+  missionTime: null,
+  method: null
+  };
     const systemMtbfInput = document.getElementById("systemMtbf");
     const missionTimeInput = document.getElementById("missionTime");
     const unitCountInput = document.getElementById("unitCount");
@@ -869,6 +1080,16 @@ MTBF_i,target = 1 / λ_i`;
         return;
       }
 
+      window.mtbfData = {
+      results: finalUnits.map(u => ({
+        name: u.name,
+        mtbf: u.allocatedMtbf
+      })),
+      systemMtbf: systemMtbf,
+      missionTime: missionTime,
+      method: method
+       };
+
       lastSummarySections = buildSummarySections(method, systemMtbf, missionTime, finalUnits);
       renderSummary(lastSummarySections);
       renderResults(finalUnits);
@@ -993,6 +1214,13 @@ function downloadExcel() {
       clearOutputs();
       clearMessage();
       updateMethodUI();
+
+      window.mtbfData = {
+      results: [],
+      systemMtbf: null,
+      missionTime: null,
+      method: null
+};
     }
 
     document.getElementById("createUnitsBtn").addEventListener("click", createUnitsFlow);
@@ -1002,6 +1230,484 @@ function downloadExcel() {
     methodSelect.addEventListener("change", updateMethodUI);
 
     updateMethodUI();
+
   </script>
+
+  <script>
+const mttrDefaultDb = [
+  { name: "Connector", key: "connector", time: 0.03, description: "Bir connector için sökme + takma süresi" },
+  { name: "Vida", key: "screw", time: 0.01, description: "Bir vida için sökme + takma süresi" },
+  { name: "Latch", key: "latch", time: 0.015, description: "Bir latch / fastener süresi" },
+  { name: "Kablo", key: "cable", time: 0.025, description: "Bir kablo / harness süresi" }
+];
+
+let mttrDb = JSON.parse(JSON.stringify(mttrDefaultDb));
+let mttrLastSummary = [];
+
+function mttrFmt(v, d = 4) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "-";
+  return Number(v).toLocaleString("tr-TR", { maximumFractionDigits: d });
+}
+
+function mttrSci(v) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "-";
+  if (v === 0) return "0";
+  if (Math.abs(v) < 0.0001 || Math.abs(v) >= 1000000) return Number(v).toExponential(4);
+  return mttrFmt(v, 4);
+}
+
+function mttrEscape(v) {
+  return String(v)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function mttrShow(type, html) {
+  document.getElementById("mttrMessageBox").innerHTML = `<div class="alert ${type}">${html}</div>`;
+}
+
+function mttrClearMsg() {
+  document.getElementById("mttrMessageBox").innerHTML = "";
+}
+
+function mttrPositive(v) {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function mttrIntOrZero(v) {
+  if (v === "" || v === null || v === undefined) return 0;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 ? n : 0;
+}
+
+function renderMttrDb() {
+  const body = document.getElementById("mttrDbBody");
+  body.innerHTML = "";
+
+  mttrDb.forEach((item, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td><input type="text" class="mttr-db-name" value="${mttrEscape(item.name)}"></td>
+      <td><input type="text" class="mttr-db-key" value="${mttrEscape(item.key)}"></td>
+      <td><input type="number" class="mttr-db-time" min="0" step="any" value="${item.time}"></td>
+      <td><input type="text" class="mttr-db-desc" value="${mttrEscape(item.description)}"></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function saveMttrDbFromUi() {
+  mttrDb = Array.from(document.querySelectorAll("#mttrDbBody tr")).map(tr => ({
+    name: tr.querySelector(".mttr-db-name").value.trim() || "Öğe",
+    key: tr.querySelector(".mttr-db-key").value.trim() || `item_${Math.random().toString(16).slice(2, 6)}`,
+    time: mttrPositive(tr.querySelector(".mttr-db-time").value) || 0,
+    description: tr.querySelector(".mttr-db-desc").value.trim()
+  }));
+}
+
+function mttrDbMap() {
+  saveMttrDbFromUi();
+  const map = {};
+  mttrDb.forEach(item => {
+    map[item.key] = Number(item.time) || 0;
+  });
+  return map;
+}
+
+function updateMttrCountBehavior() {
+  const mode = document.getElementById("mttrMtbfMode").value;
+  const countInput = document.getElementById("mttrUnitCount");
+
+  if (mode === "auto" && window.mtbfData && window.mtbfData.results.length > 0) {
+    countInput.value = String(window.mtbfData.results.length);
+    countInput.readOnly = true;
+  } else {
+    countInput.readOnly = false;
+    if (mode === "auto" && (!window.mtbfData || window.mtbfData.results.length === 0)) {
+      countInput.value = "";
+    }
+  }
+}
+
+function validateMttrBase() {
+  const systemTarget = Number(document.getElementById("mttrSystemTarget").value);
+  const mode = document.getElementById("mttrMtbfMode").value;
+  const count = Number(document.getElementById("mttrUnitCount").value);
+
+  if (!Number.isFinite(systemTarget) || systemTarget <= 0) return "Sistem MTTR hedefi pozitif olmalıdır.";
+  if (!Number.isInteger(count) || count <= 0) return "Alt sistem sayısı pozitif tam sayı olmalıdır.";
+
+  if (mode === "auto" && (!window.mtbfData || window.mtbfData.results.length === 0)) {
+    return "MTBF sekmesinden çekmek için önce MTBF sonuçları oluşturulmalıdır.";
+  }
+
+  return null;
+}
+
+function createMttrRows() {
+  mttrClearMsg();
+  clearMttrOutputs();
+
+  const validation = validateMttrBase();
+  if (validation) {
+    mttrShow("error", validation);
+    return;
+  }
+
+  const mode = document.getElementById("mttrMtbfMode").value;
+  const count = Number(document.getElementById("mttrUnitCount").value);
+  const autoRows = mode === "auto" ? (window.mtbfData?.results || []) : [];
+  const body = document.getElementById("mttrUnitsBody");
+  body.innerHTML = "";
+
+  for (let i = 1; i <= count; i++) {
+    const autoUnit = autoRows[i - 1] || null;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td><input type="text" class="mttr-name" value="${autoUnit ? mttrEscape(autoUnit.name) : `Alt Sistem ${i}`}" ${mode === "auto" ? "readonly" : ""}></td>
+      <td><input type="number" class="mttr-mtbf" min="0" step="any" value="${autoUnit ? autoUnit.mtbf : ""}" ${mode === "auto" ? "readonly" : ""}></td>
+      <td><input type="number" class="mttr-cit" min="0" step="any" placeholder="Örn. 0.25"></td>
+      <td><input type="number" class="mttr-verify" min="0" step="any" placeholder="Örn. 0.10"></td>
+      <td><input type="number" class="mttr-connector" min="0" step="1" value="0"></td>
+      <td><input type="number" class="mttr-screw" min="0" step="1" value="0"></td>
+      <td><input type="number" class="mttr-latch" min="0" step="1" value="0"></td>
+      <td><input type="number" class="mttr-cable" min="0" step="1" value="0"></td>
+    `;
+    body.appendChild(tr);
+  }
+
+  document.getElementById("mttrUnitsCard").classList.remove("hidden");
+  mttrShow("success", `${count} adet birim satırı oluşturuldu.`);
+}
+
+function collectMttrUnits() {
+  return Array.from(document.querySelectorAll("#mttrUnitsBody tr")).map((tr, i) => ({
+    index: i + 1,
+    name: tr.querySelector(".mttr-name").value.trim(),
+    mtbf: mttrPositive(tr.querySelector(".mttr-mtbf").value),
+    cit: mttrPositive(tr.querySelector(".mttr-cit").value) || 0,
+    verify: mttrPositive(tr.querySelector(".mttr-verify").value) || 0,
+    connectorCount: mttrIntOrZero(tr.querySelector(".mttr-connector").value),
+    screwCount: mttrIntOrZero(tr.querySelector(".mttr-screw").value),
+    latchCount: mttrIntOrZero(tr.querySelector(".mttr-latch").value),
+    cableCount: mttrIntOrZero(tr.querySelector(".mttr-cable").value)
+  }));
+}
+
+function validateMttrUnits(units) {
+  if (units.length === 0) return "Önce 2. adımı oluşturmalısınız.";
+  for (const u of units) {
+    if (!u.name) return `${u.index}. satırda birim adı boş bırakılamaz.`;
+    if (!u.mtbf) return `${u.name} için MTBF değeri girilmelidir.`;
+  }
+  return null;
+}
+
+function renderMttrInputsSummary(dbMap, mode) {
+  const sections = [
+    {
+      category: "support",
+      title: "Kullanılan Varsayımlar",
+      items: [
+        { k: "Connector süresi", v: `${mttrFmt(dbMap.connector)} saat/adet` },
+        { k: "Vida süresi", v: `${mttrFmt(dbMap.screw)} saat/adet` },
+        { k: "Latch süresi", v: `${mttrFmt(dbMap.latch)} saat/adet` },
+        { k: "Kablo süresi", v: `${mttrFmt(dbMap.cable)} saat/adet` },
+        { k: "MTBF kaynağı", v: mode === "auto" ? "MTBF sekmesinden otomatik çekim" : "Manuel giriş" }
+      ]
+    }
+  ];
+  renderSummaryInto("mttrInputsContent", sections);
+  document.getElementById("mttrInputsCard").classList.remove("hidden");
+}
+
+function renderSummaryInto(targetId, sections) {
+  document.getElementById(targetId).innerHTML = `
+    <div class="summary-sections">
+      ${sections.map(section => `
+        <div class="summary-section ${section.category}">
+          <h3>${mttrEscape(section.title)}</h3>
+          <div class="summary-list">
+            ${section.items.map(item => `
+              <div class="summary-item">
+                <div class="k">${mttrEscape(item.k)}</div>
+                <div class="v">${mttrEscape(item.v)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function calculateMttr() {
+  mttrClearMsg();
+  clearMttrOutputs();
+
+  const baseValidation = validateMttrBase();
+  if (baseValidation) {
+    mttrShow("error", baseValidation);
+    return;
+  }
+
+  const systemTarget = Number(document.getElementById("mttrSystemTarget").value);
+  const mode = document.getElementById("mttrMtbfMode").value;
+  const units = collectMttrUnits();
+
+  const unitValidation = validateMttrUnits(units);
+  if (unitValidation) {
+    mttrShow("error", unitValidation);
+    return;
+  }
+
+  const db = mttrDbMap();
+
+  const estimated = units.map(u => {
+    const est =
+      u.cit +
+      u.verify +
+      u.connectorCount * (db.connector || 0) +
+      u.screwCount * (db.screw || 0) +
+      u.latchCount * (db.latch || 0) +
+      u.cableCount * (db.cable || 0);
+
+    const lambda = 1 / u.mtbf;
+
+    return {
+      ...u,
+      estMttr: est,
+      lambda
+    };
+  });
+
+  const lambdaSum = estimated.reduce((s, u) => s + u.lambda, 0);
+  const weighted = estimated.map(u => ({
+    ...u,
+    weight: u.lambda / lambdaSum
+  }));
+
+  const systemEstMttr = weighted.reduce((s, u) => s + u.weight * u.estMttr, 0);
+  const k = systemEstMttr > 0 ? systemTarget / systemEstMttr : 0;
+
+  const results = weighted.map(u => {
+    const targetMttr = u.estMttr * k;
+    const availability = u.mtbf / (u.mtbf + targetMttr);
+
+    return {
+      ...u,
+      targetMttr,
+      availability,
+      note: mode === "auto" ? "MTBF otomatik çekildi" : "MTBF manuel girildi"
+    };
+  });
+
+  renderMttrInputsSummary(db, mode);
+
+  const summary = [
+    {
+      category: "target",
+      title: "Hedef Bilgileri",
+      items: [
+        { k: "Sistem MTTR hedefi", v: `${mttrFmt(systemTarget)} saat` },
+        { k: "Bakım seviyesi", v: document.getElementById("mttrMaintenanceLevel").value },
+        { k: "Toplam birim", v: String(results.length) },
+        { k: "MTBF kaynağı", v: mode === "auto" ? "Otomatik" : "Manuel" }
+      ]
+    },
+    {
+      category: "allocation",
+      title: "Prediction + Allocation",
+      items: [
+        { k: "İlk sistem MTTR tahmini", v: `${mttrFmt(systemEstMttr)} saat` },
+        { k: "Ölçek katsayısı k", v: mttrFmt(k) },
+        { k: "λ ağırlıklı roll-up", v: "Aktif" },
+        { k: "Toplam λ", v: mttrSci(lambdaSum) }
+      ]
+    },
+    {
+      category: "performance",
+      title: "Sonuç Performansı",
+      items: [
+        { k: "Hedef sistem MTTR", v: `${mttrFmt(systemTarget)} saat` },
+        { k: "Elde edilen roll-up MTTR", v: `${mttrFmt(results.reduce((s, u) => s + u.weight * u.targetMttr, 0))} saat` },
+        { k: "En yüksek Ai", v: mttrFmt(Math.max(...results.map(r => r.availability))) },
+        { k: "En düşük Ai", v: mttrFmt(Math.min(...results.map(r => r.availability))) }
+      ]
+    },
+    {
+      category: "support",
+      title: "Standart Mantığı",
+      items: [
+        { k: "Açıklama", v: "MIL-HDBK-472 maintainability prediction akışı kullanılır; prediction çıktısı sistem hedef MTTR’ine ölçeklenir." }
+      ]
+    }
+  ];
+
+  renderSummaryInto("mttrSummaryContent", summary);
+  document.getElementById("mttrSummaryCard").classList.remove("hidden");
+
+  document.getElementById("mttrResultsBody").innerHTML = results.map(r => `
+    <tr>
+      <td>${mttrEscape(r.name)}</td>
+      <td>${mttrFmt(r.mtbf)}</td>
+      <td>${mttrFmt(r.estMttr)}</td>
+      <td>${mttrFmt(r.targetMttr)}</td>
+      <td>${mttrFmt(r.weight)}</td>
+      <td>${mttrFmt(r.availability)}</td>
+      <td>${mttrEscape(r.note)}</td>
+    </tr>
+  `).join("");
+  document.getElementById("mttrResultsCard").classList.remove("hidden");
+
+  const ranking = [...results]
+    .sort((a, b) => b.availability - a.availability)
+    .map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${mttrEscape(r.name)}</td>
+        <td>${mttrFmt(r.mtbf)}</td>
+        <td>${mttrFmt(r.targetMttr)}</td>
+        <td>${mttrFmt(r.availability)}</td>
+      </tr>
+    `).join("");
+
+  document.getElementById("mttrAvailabilityBody").innerHTML = ranking;
+  document.getElementById("mttrAvailabilityCard").classList.remove("hidden");
+  document.getElementById("mttrFinalActionsCard").classList.remove("hidden");
+
+  mttrLastSummary = summary;
+
+  window.mttrData = {
+    results: results.map(r => ({
+      name: r.name,
+      mtbf: r.mtbf,
+      mttr: r.targetMttr,
+      availability: r.availability
+    })),
+    systemMttr: systemTarget,
+    summary
+  };
+
+  mttrShow("success", "MTTR tahsisi tamamlandı.");
+}
+
+function clearMttrOutputs() {
+  document.getElementById("mttrInputsCard").classList.add("hidden");
+  document.getElementById("mttrSummaryCard").classList.add("hidden");
+  document.getElementById("mttrResultsCard").classList.add("hidden");
+  document.getElementById("mttrAvailabilityCard").classList.add("hidden");
+  document.getElementById("mttrFinalActionsCard").classList.add("hidden");
+  document.getElementById("mttrInputsContent").innerHTML = "";
+  document.getElementById("mttrSummaryContent").innerHTML = "";
+  document.getElementById("mttrResultsBody").innerHTML = "";
+  document.getElementById("mttrAvailabilityBody").innerHTML = "";
+  mttrLastSummary = [];
+  window.mttrData = { results: [], systemMttr: null, summary: [] };
+}
+
+function clearMttrAll() {
+  document.getElementById("mttrSystemTarget").value = "";
+  document.getElementById("mttrUnitCount").value = "";
+  document.getElementById("mttrMtbfMode").value = "auto";
+  document.getElementById("mttrMaintenanceLevel").value = "organizational";
+  document.getElementById("mttrUnitsBody").innerHTML = "";
+  document.getElementById("mttrUnitsCard").classList.add("hidden");
+  clearMttrOutputs();
+  mttrClearMsg();
+  updateMttrCountBehavior();
+}
+
+function mttrCreateExcelHtml() {
+  const summaryHtml = mttrLastSummary.map(section => `
+    <table border="1" style="border-collapse:collapse; margin-bottom:14px;">
+      <tr><th colspan="2">${mttrEscape(section.title)}</th></tr>
+      ${section.items.map(item => `<tr><td>${mttrEscape(item.k)}</td><td>${mttrEscape(item.v)}</td></tr>`).join("")}
+    </table>
+  `).join("");
+
+  const headerCells = Array.from(document.querySelectorAll("#mttrResultsTable thead th"))
+    .map(th => `<th>${mttrEscape(th.textContent.trim())}</th>`)
+    .join("");
+
+  const bodyRows = Array.from(document.querySelectorAll("#mttrResultsBody tr"))
+    .map(tr => {
+      const cells = Array.from(tr.querySelectorAll("td"))
+        .map(td => `<td>${mttrEscape(td.textContent.trim())}</td>`)
+        .join("");
+      return `<tr>${cells}</tr>`;
+    }).join("");
+
+  return `
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body>
+      <h2>MTTR Tahsis Özeti</h2>
+      ${summaryHtml}
+      <h2>Sonuç Tablosu</h2>
+      <table border="1" style="border-collapse:collapse;">
+        <thead><tr>${headerCells}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </body>
+    </html>
+  `;
+}
+
+function downloadMttrExcel() {
+  const html = mttrCreateExcelHtml();
+  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mttr_tahsis_sonuclari.xls";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("mttrMtbfMode").addEventListener("change", updateMttrCountBehavior);
+document.getElementById("mttrCreateUnitsBtn").addEventListener("click", mttrCreateRows);
+document.getElementById("mttrCalculateBtn").addEventListener("click", calculateMttr);
+document.getElementById("mttrExcelBtn").addEventListener("click", downloadMttrExcel);
+document.getElementById("mttrClearBtn").addEventListener("click", clearMttrAll);
+document.getElementById("mttrDbAddBtn").addEventListener("click", () => {
+  saveMttrDbFromUi();
+  mttrDb.push({
+    name: "Yeni Öğe",
+    key: `custom_${mttrDb.length + 1}`,
+    time: 0.01,
+    description: "Kullanıcı tanımlı süre"
+  });
+  renderMttrDb();
+});
+document.getElementById("mttrDbResetBtn").addEventListener("click", () => {
+  mttrDb = JSON.parse(JSON.stringify(mttrDefaultDb));
+  renderMttrDb();
+});
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tabName) {
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+  document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+}
+
+renderMttrDb();
+updateMttrCountBehavior();
+</script>
 </body>
 </html>
